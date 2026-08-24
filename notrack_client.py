@@ -9,6 +9,7 @@ SSE (Server-Sent Events) stream parse karke plain text jawab deta hai.
 
 import json
 import uuid
+import time
 import httpx
 
 BASE = "https://notrack.ai"
@@ -39,6 +40,7 @@ def chat(
     system_prompt: str | None = None,
     timeout: float = 120.0,
     max_chars: int = 3800,
+    retries: int = 4,
 ) -> str:
     """
     notrack.ai ko ek message bhej kar full text jawab wapas deta hai.
@@ -112,37 +114,55 @@ def chat(
 
     final_text = ""
     new_chat_id = chat_id
-    try:
-        with httpx.Client(timeout=timeout, http2=False, follow_redirects=True) as client:
-            with client.stream("POST", DISPATCH, json=payload, headers=headers) as resp:
-                if resp.status_code != 200:
-                    body = resp.read().decode("utf-8", "ignore")[:300]
-                    raise NoTrackError(f"HTTP {resp.status_code}: {body}")
+    last_err = None
+    for attempt in range(retries):
+        final_text = ""
+        try:
+            with httpx.Client(timeout=timeout, http2=False, follow_redirects=True) as client:
+                with client.stream("POST", DISPATCH, json=payload, headers=headers) as resp:
+                    if resp.status_code == 429:
+                        wait = 4 * (attempt + 1)
+                        time.sleep(wait)
+                        last_err = NoTrackError(f"HTTP 429 (ratelimit), retry after {wait}s")
+                        continue
+                    if resp.status_code != 200:
+                        body = resp.read().decode("utf-8", "ignore")[:300]
+                        raise NoTrackError(f"HTTP {resp.status_code}: {body}")
 
-                for line in resp.iter_lines():
-                    if not line or not line.startswith("data:"):
-                        continue
-                    data = line[len("data:"):].strip()
-                    if not data:
-                        continue
-                    try:
-                        evt = json.loads(data)
-                    except json.JSONDecodeError:
-                        continue
-
-                    etype = evt.get("type")
-                    if etype == "chat_meta":
-                        new_chat_id = evt.get("chat_id", new_chat_id)
-                    elif etype == "message":
-                        # yeh final complete message hai (sabse reliable)
-                        final_text = evt.get("content", "") or final_text
-                    elif etype == "delta" and not final_text:
-                        # streaming chunk (sirf tab use jab message event na mile)
-                        final_text += evt.get("chunk", "")
-                    elif etype == "error":
-                        raise NoTrackError(f"API error: {evt.get('content')}")
-    except httpx.HTTPError as e:
-        raise NoTrackError(f"Network error: {e}")
+                    for line in resp.iter_lines():
+                        if not line or not line.startswith("data:"):
+                            continue
+                        data = line[len("data:"):].strip()
+                        if not data:
+                            continue
+                        try:
+                            evt = json.loads(data)
+                        except json.JSONDecodeError:
+                            continue
+                        etype = evt.get("type")
+                        if etype == "chat_meta":
+                            new_chat_id = evt.get("chat_id", new_chat_id)
+                        elif etype == "message":
+                            final_text = evt.get("content", "") or final_text
+                        elif etype == "delta" and not final_text:
+                            final_text += evt.get("chunk", "")
+                        elif etype == "error":
+                            ec = evt.get("code", "")
+                            if ec == "ratelimit":
+                                wait = 4 * (attempt + 1)
+                                time.sleep(wait)
+                                last_err = NoTrackError("ratelimit, retry")
+                                break
+                            raise NoTrackError(f"API error: {evt.get('content')}")
+            if final_text:
+                break
+        except httpx.HTTPError as e:
+            last_err = NoTrackError(f"Network error: {e}")
+            time.sleep(3)
+            continue
+    else:
+        if last_err:
+            raise last_err
 
     return final_text.strip()
 
