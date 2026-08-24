@@ -148,12 +148,22 @@ def chat(
                             final_text += evt.get("chunk", "")
                         elif etype == "error":
                             ec = evt.get("code", "")
-                            if ec == "ratelimit":
-                                wait = 4 * (attempt + 1)
+                            content = str(evt.get("content", ""))
+                            low = content.lower()
+                            # transient errors (upstream down, connection drop, etc.) pe retry karo
+                            transient = (
+                                ec == "ratelimit"
+                                or any(k in low for k in [
+                                    "upstream", "curl", "failed", "timeout", "connection",
+                                    "partial", "502", "503", "500", "reset", "unreachable",
+                                ])
+                            )
+                            if transient and attempt < retries - 1:
+                                wait = 5 * (attempt + 1)
                                 time.sleep(wait)
-                                last_err = NoTrackError("ratelimit, retry")
+                                last_err = NoTrackError(f"transient ({content[:60]}), retry")
                                 break
-                            raise NoTrackError(f"API error: {evt.get('content')}")
+                            raise NoTrackError(f"API error: {content}")
             if final_text:
                 break
         except httpx.HTTPError as e:

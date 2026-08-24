@@ -129,7 +129,21 @@ _ARG_ALIASES = {
     "q": "query", "search": "query", "search_query": "query",
     "expr": "expression", "eq": "expression", "math": "expression",
     "cmd": "command", "shell": "command",
-    "url_to_open": "url", "link": "url", "website": "url",
+    "url_to_open": "url", "link": "url", "website": "url", "address": "url",
+}
+
+# model kabhi galat tool naam use kare to canonical naam pe map karo
+_TOOL_ALIASES = {
+    "http_get": "fetch_url", "get_url": "fetch_url", "browse": "fetch_url",
+    "get_page": "fetch_url", "open_url": "fetch_url", "open_page": "fetch_url",
+    "http": "fetch_url", "get": "fetch_url", "visit": "fetch_url",
+    "search": "web_search", "internet_search": "web_search", "google": "web_search",
+    "execute": "run_shell", "shell": "run_shell", "run": "run_shell",
+    "terminal": "run_shell", "cmd": "run_shell", "bash": "run_shell", "command": "run_shell",
+    "calc": "calculator", "math": "calculator", "compute": "calculator",
+    "ls": "list_dir", "dir": "list_dir", "list": "list_dir",
+    "save_file": "write_file", "create_file": "write_file", "make_file": "write_file",
+    "get_file": "read_file", "cat": "read_file", "open_file": "read_file",
 }
 
 
@@ -207,6 +221,7 @@ def run_agent(
             return clean or response
 
         tool_name, tool_args = call
+        tool_name = _TOOL_ALIASES.get(tool_name, tool_name)  # alias resolve
         tool_args = _normalize_args(tool_name, tool_args)
         emit({"type": "tool_call", "name": tool_name, "args": tool_args})
         result = _execute_tool(tool_name, tool_args)
