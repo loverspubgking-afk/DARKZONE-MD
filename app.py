@@ -78,9 +78,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
     padding:0 18px;gap:12px;background:var(--panel)}
   .topbar .menu-btn{display:none;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
   .topbar .t-title{font-size:14px;font-weight:600}
-  .topbar .t-model{font-size:11px;color:var(--muted);padding:3px 9px;border:1px solid var(--border2);
-    border-radius:20px;margin-left:auto;display:flex;align-items:center;gap:5px}
-  .topbar .t-model .d{width:6px;height:6px;border-radius:50%;background:var(--red)}
+  .topbar .t-model{font-size:12px;color:var(--text);padding:5px 10px;border:1px solid var(--border2);
+    border-radius:8px;margin-left:auto;background:var(--panel2);outline:none;cursor:pointer;font-family:inherit}
+  .topbar .t-model option{background:var(--panel2);color:var(--text)}
 
   .msgs{flex:1;overflow-y:auto;padding:22px 0 10px;scroll-behavior:smooth}
   .msgs::-webkit-scrollbar{width:8px}.msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
@@ -176,7 +176,11 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <div class="topbar">
       <button class="menu-btn" onclick="openSidebar()">☰</button>
       <div class="t-title" id="curTitle">New Chat</div>
-      <div class="t-model"><span class="d"></span> NoTrack · Uncensored</div>
+      <select class="t-model" id="modelSel" title="Brain model">
+        <option value="C">NoTrack (Uncensored)</option>
+        <option value="B">ChatGPT (Smart)</option>
+        <option value="A">Minimax</option>
+      </select>
     </div>
 
     <div class="msgs" id="msgs">
@@ -283,7 +287,7 @@ async function doSend(){
 
   try{
     let resp=await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:text,history:history})});
+      body:JSON.stringify({message:text,history:history,model:$('#modelSel').value})});
     let reader=resp.body.getReader(),dec=new TextDecoder(),buf='';
     while(true){
       let{done,value}=await reader.read();if(done)break;
@@ -344,6 +348,7 @@ async def agent_endpoint(req: Request):
     data = await req.json()
     message = data.get("message", "")
     history = data.get("history", [])
+    model = data.get("model", "C")
 
     async def event_stream():
         q: queue.Queue = queue.Queue()
@@ -354,7 +359,7 @@ async def agent_endpoint(req: Request):
 
         def worker():
             try:
-                run_agent(message, history=history, on_event=on_event, max_steps=10, model="C")
+                run_agent(message, history=history, on_event=on_event, max_steps=10, model=model)
             except Exception as e:
                 q.put({"type": "error", "text": str(e)})
             finally:
