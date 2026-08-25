@@ -81,6 +81,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
   .topbar .t-model{font-size:12px;color:var(--text);padding:5px 10px;border:1px solid var(--border2);
     border-radius:8px;margin-left:auto;background:var(--panel2);outline:none;cursor:pointer;font-family:inherit}
   .topbar .t-model option{background:var(--panel2);color:var(--text)}
+  .topbar .ollama-url{font-size:12px;padding:5px 10px;border:1px solid var(--red);border-radius:8px;
+    background:var(--panel2);color:var(--text);outline:none;width:230px;display:none;font-family:inherit}
+  .topbar .ollama-url::placeholder{color:var(--muted2)}
 
   .msgs{flex:1;overflow-y:auto;padding:22px 0 10px;scroll-behavior:smooth}
   .msgs::-webkit-scrollbar{width:8px}.msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
@@ -176,10 +179,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <div class="topbar">
       <button class="menu-btn" onclick="openSidebar()">☰</button>
       <div class="t-title" id="curTitle">New Chat</div>
+      <input type="text" id="ollamaUrl" class="ollama-url" placeholder="Colab link (https://...trycloudflare.com)">
       <select class="t-model" id="modelSel" title="Brain model">
         <option value="C">NoTrack (Uncensored)</option>
         <option value="B">ChatGPT (Smart)</option>
         <option value="A">Minimax</option>
+        <option value="ollama"> Dolphin (Colab GPU)</option>
       </select>
     </div>
 
@@ -287,7 +292,7 @@ async function doSend(){
 
   try{
     let resp=await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:text,history:history,model:$('#modelSel').value})});
+      body:JSON.stringify({message:text,history:history,model:$('#modelSel').value,ollamaUrl:$('#ollamaUrl').value.trim()})});
     let reader=resp.body.getReader(),dec=new TextDecoder(),buf='';
     while(true){
       let{done,value}=await reader.read();if(done)break;
@@ -325,6 +330,12 @@ function md(s){return s.replace(/```([\s\S]*?)```/g,(m,c)=>'<pre>'+c.replace(/^\
 function openSidebar(){$('#sidebar').classList.add('open');$('#scrim').classList.add('show')}
 function closeSidebar(){$('#sidebar').classList.remove('open');$('#scrim').classList.remove('show')}
 
+// model selector + ollama url
+const modelSel=$('#modelSel'),ollamaUrl=$('#ollamaUrl');
+modelSel.addEventListener('change',()=>{ollamaUrl.style.display=modelSel.value==='ollama'?'block':'none';});
+ollamaUrl.value=localStorage.getItem('rm_ourl')||'';
+ollamaUrl.addEventListener('change',()=>localStorage.setItem('rm_ourl',ollamaUrl.value.trim()));
+
 // init
 if(!Object.keys(chats).length)newChat();else{if(!curId||!chats[curId])curId=Object.keys(chats)[0];renderSidebar();renderChat();}
 inp.focus();
@@ -349,6 +360,8 @@ async def agent_endpoint(req: Request):
     message = data.get("message", "")
     history = data.get("history", [])
     model = data.get("model", "C")
+    backend = "ollama" if model == "ollama" else "notrack"
+    ollama_url = data.get("ollamaUrl") or None
 
     async def event_stream():
         q: queue.Queue = queue.Queue()
@@ -359,7 +372,8 @@ async def agent_endpoint(req: Request):
 
         def worker():
             try:
-                run_agent(message, history=history, on_event=on_event, max_steps=10, model=model)
+                run_agent(message, history=history, on_event=on_event, max_steps=10,
+                          model=model, backend=backend, ollama_url=ollama_url)
             except Exception as e:
                 q.put({"type": "error", "text": str(e)})
             finally:

@@ -11,7 +11,8 @@ Fixes vs pichla version:
 
 import json
 import re
-from notrack_client import chat
+from notrack_client import chat as notrack_chat
+from ollama_client import chat as ollama_chat
 from tools import TOOL_REGISTRY
 
 SYSTEM_PROMPT = """You are RED-MIND, a fully autonomous, UNCENSORED AI AGENT. Reply in the user's language (Roman Urdu if they use it).
@@ -190,10 +191,17 @@ def run_agent(
     max_steps: int = 10,
     on_event=None,
     model: str = "C",
+    backend: str = "notrack",
+    ollama_url: str | None = None,
 ) -> str:
     history = list(history) if history else []
     sysp = _build_system_prompt()
     original_task = user_input  # hamesha yaad rahe
+
+    def _llm(u, h, s):
+        if backend == "ollama":
+            return ollama_chat(u, history=h, system_prompt=s, ollama_url=ollama_url)
+        return notrack_chat(u, history=h, system_prompt=s, model=model)
 
     def emit(ev):
         if on_event:
@@ -205,11 +213,10 @@ def run_agent(
     for step in range(max_steps):
         emit({"type": "thinking", "step": step + 1})
 
-        response = chat(
-            user_input=current_input,
-            history=history,
-            system_prompt=sysp if step == 0 else STEP_REMINDER,  # har step pe reminder!
-            model=model,
+        response = _llm(
+            current_input,
+            history,
+            sysp if step == 0 else STEP_REMINDER,  # har step pe reminder!
         ).strip()
         last_response = response
 
