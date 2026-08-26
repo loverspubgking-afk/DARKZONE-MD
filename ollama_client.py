@@ -8,6 +8,25 @@ Colab tunnel link bhi de sakte ho: https://xxx.trycloudflare.com
 import os
 import httpx
 
+# Kaggle notebook is file mein har baar fresh link upload karta hai
+GITHUB_LINK_URL = "https://raw.githubusercontent.com/loverspubgking-afk/DARKZONE-MD/main/tunnel-link.txt"
+
+
+def _resolve_url(ollama_url: str | None) -> str:
+    """Agar URL khali/'auto' hai to GitHub se latest tunnel link uthao."""
+    u = (ollama_url or "").strip()
+    if u and u.lower() != "auto":
+        return u.rstrip("/")
+    # auto: GitHub se fresh link
+    try:
+        r = httpx.get(GITHUB_LINK_URL, timeout=15)
+        link = r.text.strip()
+        if link.startswith("http"):
+            return link.rstrip("/")
+    except Exception:
+        pass
+    return "http://localhost:11434"
+
 
 def chat(
     user_input: str,
@@ -19,7 +38,7 @@ def chat(
     timeout: float = 300.0,
 ) -> str:
     """Ollama /api/chat se plain text jawab."""
-    base = (ollama_url or os.environ.get("OLLAMA_URL", "http://localhost:11434")).rstrip("/")
+    base = _resolve_url(ollama_url)
     mdl = model or os.environ.get("OLLAMA_MODEL", "huihui_ai/dolphin3-abliterated")
 
     messages = []
