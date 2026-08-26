@@ -349,6 +349,18 @@ async def index():
     return HTMLResponse(HTML_PAGE)
 
 
+# files serve karo (images/audio/reports browser mein dikhane ke liye)
+from fastapi.responses import FileResponse
+import os as _os
+
+@app.get("/files/{fname}")
+async def serve_file(fname: str):
+    safe = _os.path.basename(fname)  # path traversal se bachao
+    if _os.path.exists(safe) and _os.path.isfile(safe):
+        return FileResponse(safe)
+    return JSONResponse({"error": "file nahi mili"}, status_code=404)
+
+
 @app.get("/api/health")
 async def health():
     return JSONResponse({"status": "ok", "agent": "red-mind", "uncensored": True})

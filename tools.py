@@ -183,6 +183,133 @@ def now() -> str:
     return datetime.now().strftime("%A, %d %B %Y — %H:%M:%S")
 
 
+# ---------- 🔥 POWER TOOLS (mere jaise) ----------
+
+def generate_image(prompt: str, path: str = "image.jpg", width: int = 768, height: int = 768) -> str:
+    """AI se image banao (Pollinations — free, no key). Prompt describe karo."""
+    try:
+        url = (f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt[:300])}"
+               f"?width={width}&height={height}&nologo=true")
+        r = httpx.get(url, timeout=180.0, follow_redirects=True)
+        if r.status_code == 200 and len(r.content) > 5000:
+            with open(path, "wb") as f:
+                f.write(r.content)
+            return f"🖼️ Image ban gayi: {path} ({len(r.content)//1024} KB) — open_in_browser('{path}') se dekho"
+        return f"Image error: HTTP {r.status_code}"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def speak(text: str, lang: str = "ur", path: str = "speech.mp3") -> str:
+    """Text ko AWAAZ mein badlo (Google TTS free). lang: ur (Urdu), en, hi..."""
+    try:
+        q = urllib.parse.quote(text[:200])
+        url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={q}&tl={lang}&client=tw-ob"
+        r = httpx.get(url, timeout=30.0, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0)"})
+        if r.status_code == 200 and len(r.content) > 500:
+            with open(path, "wb") as f:
+                f.write(r.content)
+            return f"🔊 Audio ban gaya: {path} ({len(r.content)//1024} KB) — open_in_browser('{path}') se suno"
+        return f"TTS error: HTTP {r.status_code}"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def download_file(url: str, path: str = "downloaded_file") -> str:
+    """Internet se koi bhi file download karo."""
+    try:
+        with httpx.stream("GET", url, timeout=180.0, follow_redirects=True) as r:
+            if r.status_code != 200:
+                return f"HTTP {r.status_code}"
+            total = 0
+            with open(path, "wb") as f:
+                for chunk in r.iter_bytes():
+                    f.write(chunk)
+                    total += len(chunk)
+        return f"⬇️ Download complete: {path} ({total//1024} KB)"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def youtube_search(query: str, count: int = 5) -> str:
+    """YouTube par videos search karo (titles + links)."""
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        r = httpx.get(f"https://www.youtube.com/results?search_query={urllib.parse.quote(query)}",
+                      headers=headers, timeout=20.0)
+        m = re.search(r"var ytInitialData = ({.*?});</script>", r.text)
+        if not m:
+            return "YouTube parse error"
+        import json as _json
+        data = _json.loads(m.group(1))
+        out = []
+
+        def _find(obj):
+            if isinstance(obj, dict):
+                if "videoRenderer" in obj and len(out) < count:
+                    vr = obj["videoRenderer"]
+                    title = ""
+                    runs = vr.get("title", {}).get("runs", [])
+                    if runs:
+                        title = runs[0].get("text", "")
+                    vid = vr.get("videoId", "")
+                    if title and vid:
+                        out.append(f"• {title}\n  https://www.youtube.com/watch?v={vid}")
+                for v in obj.values():
+                    _find(v)
+            elif isinstance(obj, list):
+                for v in obj:
+                    _find(v)
+
+        _find(data)
+        return "\n".join(out) if out else "kuch nahi mila"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def system_info() -> str:
+    """System ki poori info (OS, CPU, RAM, disk)."""
+    try:
+        import platform, shutil, os
+        du = shutil.disk_usage(os.getcwd())
+        return (f"OS: {platform.system()} {platform.release()} ({platform.machine()})\n"
+                f"Python: {platform.python_version()}\n"
+                f"CPU cores: {os.cpu_count()}\n"
+                f"Disk free: {du.free//(1024**3)}GB / total {du.total//(1024**3)}GB\n"
+                f"Folder: {os.getcwd()}")
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def open_in_browser(target: str) -> str:
+    """Browser mein kholo (file ya URL) — image/audio/results dikhane ke liye."""
+    try:
+        import webbrowser, os
+        if not target.startswith("http") and os.path.exists(target):
+            url = f"http://localhost:8000/files/{os.path.basename(target)}"
+        else:
+            url = target
+        webbrowser.open(url)
+        return f"✅ Browser mein khul gaya: {url}"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def pdf_read(path: str) -> str:
+    """PDF file ka text nikaalo (pypdf chahiye: pip install pypdf)."""
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(path)
+        text = ""
+        for page in reader.pages[:10]:
+            text += (page.extract_text() or "") + "\n"
+        return text[:3000] if text else "PDF mein text nahi mila"
+    except ImportError:
+        return "[pypdf install nahi — run_shell('pip install pypdf') karo pehle]"
+    except Exception as e:
+        return f"Error: {e}"
+
+
 # Tool registry — agent yeh se call karta hai
 TOOL_REGISTRY = {
     "web_search": {"fn": web_search,
@@ -221,4 +348,19 @@ TOOL_REGISTRY = {
                          "desc": "Wikipedia par articles dhundna. Args: query (str)."},
     "now": {"fn": now,
             "desc": "Aaj ki date aur current time (koi args nahi)."},
+    # ===== 🔥 POWER TOOLS =====
+    "generate_image": {"fn": generate_image,
+                       "desc": "AI se image banana (free, no key). Prompt se picture banti hai. Args: prompt (str, English mein describe karo), path (str default image.jpg), width/height (int default 768)."},
+    "speak": {"fn": speak,
+              "desc": "Text ko AWAAZ (speech audio) mein convert karna. Args: text (str), lang (str: 'ur' Urdu, 'en' English, 'hi' Hindi), path (str default speech.mp3)."},
+    "download_file": {"fn": download_file,
+                      "desc": "Internet se koi bhi file download karna. Args: url (str), path (str — jahan save karni hai)."},
+    "youtube_search": {"fn": youtube_search,
+                       "desc": "YouTube par videos search karna (titles + links). Args: query (str), count (int default 5)."},
+    "system_info": {"fn": system_info,
+                    "desc": "System ki info (OS, CPU, disk). Koi args nahi."},
+    "open_in_browser": {"fn": open_in_browser,
+                        "desc": "File ya URL browser mein kholna (user ko dikhane ke liye). Args: target (str — file path ya http URL)."},
+    "pdf_read": {"fn": pdf_read,
+                 "desc": "PDF file ka text nikaalna. Args: path (str)."},
 }
