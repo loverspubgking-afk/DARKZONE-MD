@@ -101,8 +101,10 @@ def list_dir(path: str = ".") -> str:
         return f"Error: {e}"
 
 
-def run_shell(command: str, timeout: int = 30) -> str:
-    """Terminal command chalata hai. Powerful hai — ehtiyat se."""
+def run_shell(command: str, timeout: int = 300) -> str:
+    """Terminal command chalata hai. Installations ke liye timeout=600 do.
+    Args: command (str), timeout (int seconds, default 300, max 900)."""
+    timeout = min(int(timeout or 300), 900)
     try:
         out = subprocess.run(
             command, shell=True, capture_output=True, text=True, timeout=timeout
@@ -112,9 +114,9 @@ def run_shell(command: str, timeout: int = 30) -> str:
             result += out.stdout
         if out.stderr:
             result += ("\n[STDERR]\n" + out.stderr)
-        return (result or "(no output)")[:4000]
+        return (result or "(no output)")[:5000]
     except subprocess.TimeoutExpired:
-        return f"Timeout ({timeout}s) — command ruk gaya"
+        return f"Timeout ({timeout}s) — command abhi chal rahi thi. Chhoti commands do ya timeout barhao."
     except Exception as e:
         return f"Error: {e}"
 
@@ -134,7 +136,8 @@ def calculator(expression: str) -> str:
 # ---------- NAYE TOOLS ----------
 
 def http_request(url: str, method: str = "GET", body=None, headers=None) -> str:
-    """Kisi bhi API/website se HTTP request (GET/POST/PUT/DELETE) — automation ke liye."""
+    """Kisi bhi website/API ko HTTP request (GET/POST/PUT/DELETE).
+    RESPONSE HEADERS bhi dikhata hai (Server, X-Powered-By, tech stack ke liye)."""
     try:
         h = headers if isinstance(headers, dict) else {}
         kwargs = {"headers": h, "timeout": 25.0, "follow_redirects": True}
@@ -143,7 +146,9 @@ def http_request(url: str, method: str = "GET", body=None, headers=None) -> str:
         elif isinstance(body, str) and body:
             kwargs["content"] = body
         r = httpx.request(method.upper(), url, **kwargs)
-        return f"HTTP {r.status_code}\n\n{r.text[:2500]}"
+        # headers pehle (security/tech analysis ke liye zaroori)
+        hdr = "\n".join(f"  {k}: {v}" for k, v in r.headers.items())
+        return f"HTTP {r.status_code}\n\nHEADERS:\n{hdr}\n\nBODY:\n{r.text[:2200]}"
     except Exception as e:
         return f"Error: {e}"
 
@@ -323,7 +328,7 @@ TOOL_REGISTRY = {
     "list_dir": {"fn": list_dir,
                  "desc": "Directory listing. Args: path (str, default '.')."},
     "run_shell": {"fn": run_shell,
-                  "desc": "Terminal/shell command chalana (bahut powerful). Args: command (str)."},
+                  "desc": "Terminal/shell command chalana (bahut powerful — pip install, scripts, kuch bhi). Installations ke liye timeout=600 pass karo. Args: command (str), timeout (int seconds, default 300)."},
     "calculator": {"fn": calculator,
                    "desc": "Math calculation. Args: expression (str)."},
     # ===== REAL BROWSER AUTOMATION (Playwright) =====
