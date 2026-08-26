@@ -8,8 +8,9 @@ Colab tunnel link bhi de sakte ho: https://xxx.trycloudflare.com
 import os
 import httpx
 
-# Kaggle notebook is file mein har baar fresh link upload karta hai
+# Kaggle notebook is files mein har baar fresh link/model upload karta hai
 GITHUB_LINK_URL = "https://raw.githubusercontent.com/loverspubgking-afk/DARKZONE-MD/main/tunnel-link.txt"
+GITHUB_MODEL_URL = "https://raw.githubusercontent.com/loverspubgking-afk/DARKZONE-MD/main/model-name.txt"
 
 
 def _resolve_url(ollama_url: str | None) -> str:
@@ -17,7 +18,6 @@ def _resolve_url(ollama_url: str | None) -> str:
     u = (ollama_url or "").strip()
     if u and u.lower() != "auto":
         return u.rstrip("/")
-    # auto: GitHub se fresh link
     try:
         r = httpx.get(GITHUB_LINK_URL, timeout=15)
         link = r.text.strip()
@@ -26,6 +26,21 @@ def _resolve_url(ollama_url: str | None) -> str:
     except Exception:
         pass
     return "http://localhost:11434"
+
+
+def _resolve_model(model: str | None) -> str:
+    """Agar model khali/'auto' hai to GitHub se latest model naam uthao."""
+    m = (model or "").strip()
+    if m and m.lower() != "auto":
+        return m
+    try:
+        r = httpx.get(GITHUB_MODEL_URL, timeout=15)
+        name = r.text.strip()
+        if name and (":" in name or "/" in name):
+            return name
+    except Exception:
+        pass
+    return "huihui_ai/dolphin3-abliterated"
 
 
 def chat(
@@ -39,7 +54,7 @@ def chat(
 ) -> str:
     """Ollama /api/chat se plain text jawab."""
     base = _resolve_url(ollama_url)
-    mdl = model or os.environ.get("OLLAMA_MODEL", "huihui_ai/dolphin3-abliterated")
+    mdl = _resolve_model(model)
 
     messages = []
     if system_prompt:
