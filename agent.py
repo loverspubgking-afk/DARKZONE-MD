@@ -122,6 +122,33 @@ def _extract_tool_call(text: str):
         name = m.group(1)
         if name in valid:
             return name, {m.group(2): _coerce(m.group(3))}
+
+    # 6) [tool_call] / [TOOL] plain-text prefix (model kabhi yeh likhta hai)
+    single_arg = {
+        "run_shell": "command", "calculator": "expression", "web_search": "query",
+        "fetch_url": "url", "browser_goto": "url", "read_file": "path",
+        "list_dir": "path", "weather": "city", "wikipedia_search": "query",
+        "http_request": "url",
+    }
+    for m in re.finditer(r"\[\s*(?:tool_call|tool|TOOL_CALL|TOOL)\s*\]\s*(.+)", text, re.DOTALL):
+        content = m.group(1).strip()
+        if not content:
+            continue
+        m2 = re.match(r"([a-zA-Z_]+)\s*\((.*)\)\s*$", content, re.DOTALL)
+        if m2 and m2.group(1) in valid:
+            name = m2.group(1)
+            inner = m2.group(2).strip()
+            args = _safe_json(inner) if inner.startswith("{") else None
+            if isinstance(args, dict) and args:
+                return name, args
+            if inner and name in single_arg:
+                return name, {single_arg[name]: inner.strip().strip("'\"")}
+            return name, {}
+        # tool naam nahi mila? poora content shell command samjho
+        if "\n" in content:
+            content = content.split("\n")[0].strip()
+        if content and not content.startswith("#"):
+            return "run_shell", {"command": content}
     return None
 
 
@@ -181,6 +208,10 @@ def _strip_tool_tags(text: str) -> str:
     text = re.sub(r"<function=[^>]*>.*?</function>", "", text, flags=re.DOTALL)
     text = re.sub(r"<tool>.*", "", text, flags=re.DOTALL)
     text = re.sub(r"<tool_call>.*", "", text, flags=re.DOTALL)
+    # simulated tool-result blocks bhi hatao
+    text = re.sub(r"\[\s*TOOL_RESULT\s*\].*", "", text, flags=re.DOTALL)
+    text = re.sub(r"\[\s*tool_result\s*\].*", "", text, flags=re.DOTALL)
+    text = re.sub(r"\[\s*tool_call\s*\].*", "", text, flags=re.DOTALL)
     return text.strip()
 
 

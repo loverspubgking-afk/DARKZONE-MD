@@ -131,6 +131,58 @@ def calculator(expression: str) -> str:
         return f"Error: {e}"
 
 
+# ---------- NAYE TOOLS ----------
+
+def http_request(url: str, method: str = "GET", body=None, headers=None) -> str:
+    """Kisi bhi API/website se HTTP request (GET/POST/PUT/DELETE) — automation ke liye."""
+    try:
+        h = headers if isinstance(headers, dict) else {}
+        kwargs = {"headers": h, "timeout": 25.0, "follow_redirects": True}
+        if isinstance(body, dict):
+            kwargs["json"] = body
+        elif isinstance(body, str) and body:
+            kwargs["content"] = body
+        r = httpx.request(method.upper(), url, **kwargs)
+        return f"HTTP {r.status_code}\n\n{r.text[:2500]}"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def weather(city: str) -> str:
+    """Kisi bhi city ka mausam (wttr.in, free)."""
+    try:
+        r = httpx.get(f"https://wttr.in/{city}?format=j1", timeout=20.0)
+        cur = r.json().get("current_condition", [{}])[0]
+        desc = cur.get("weatherDesc", [{}])[0].get("value", "")
+        return (f"{city}: {cur.get('temp_C')}°C (feels {cur.get('FeelsLikeC')}°C), {desc}, "
+                f"humidity {cur.get('humidity')}%, wind {cur.get('windspeedKmph')} km/h")
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def wikipedia_search(query: str) -> str:
+    """Wikipedia par search karke articles dhundo."""
+    try:
+        r = httpx.get("https://en.wikipedia.org/w/api.php", params={
+            "action": "query", "list": "search", "srsearch": query,
+            "format": "json", "srlimit": 3}, timeout=20.0)
+        results = r.json().get("query", {}).get("search", [])
+        if not results:
+            return f"'{query}' par kuch nahi mila"
+        lines = []
+        for s in results[:3]:
+            lines.append(f"• {s['title']}\n  https://en.wikipedia.org/wiki/{s['title'].replace(' ', '_')}")
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def now() -> str:
+    """Aaj ki date aur waqt (local timezone)."""
+    from datetime import datetime
+    return datetime.now().strftime("%A, %d %B %Y — %H:%M:%S")
+
+
 # Tool registry — agent yeh se call karta hai
 TOOL_REGISTRY = {
     "web_search": {"fn": web_search,
@@ -160,4 +212,13 @@ TOOL_REGISTRY = {
                       "desc": "Keyboard key press karna (Enter, Tab, Escape, ArrowDown). Args: key (str)."},
     "browser_screenshot": {"fn": browser_screenshot,
                            "desc": "Current page ka screenshot lena. Args: path (str default /tmp/agent_shot.png)."},
+    # ===== NAYE TOOLS =====
+    "http_request": {"fn": http_request,
+                     "desc": "Kisi bhi website/API ko HTTP request bhejna (GET/POST/PUT/DELETE). Automation aur API kaam ke liye. Args: url (str), method (str default GET), body (dict/str, optional), headers (dict, optional)."},
+    "weather": {"fn": weather,
+                "desc": "Kisi city ka current mausam. Args: city (str)."},
+    "wikipedia_search": {"fn": wikipedia_search,
+                         "desc": "Wikipedia par articles dhundna. Args: query (str)."},
+    "now": {"fn": now,
+            "desc": "Aaj ki date aur current time (koi args nahi)."},
 }
