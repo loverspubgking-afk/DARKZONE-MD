@@ -12,6 +12,7 @@ zaroorat nahi).
 
 import os
 import json
+import threading
 
 # Playwright optional rakha gaya hai — agar na ho to tools graceful fail karte hain
 try:
@@ -21,6 +22,25 @@ except Exception:
     _HAS_PW = False
 
 _session = None
+_session_thread = None
+
+
+def get_session():
+    """Browser session (thread-safe): agar thread badla ho to naya session banao."""
+    global _session, _session_thread
+    if not _HAS_PW:
+        raise RuntimeError("Playwright install nahi hai. pip install playwright + playwright install chromium")
+    current = threading.get_ident()
+    if _session is None or _session_thread != current:
+        # purana session saaf karo (thread exit ho chuka hoga)
+        if _session is not None:
+            try:
+                _session.close()
+            except Exception:
+                pass
+        _session = BrowserSession()
+        _session_thread = current
+    return _session
 
 
 class BrowserSession:
@@ -167,49 +187,76 @@ class BrowserSession:
         return t
 
 
-def get_session():
-    """Singleton browser session lazily start karo."""
-    global _session
+# ---------- Dedicated Browser Thread (playwright greenlet ka pakka fix) ----------
+import queue as _queue_mod
+
+_worker_thread = None
+_work_queue = None
+
+
+def _browser_worker():
+    """Browser ka apna thread — kabhi exit nahi hota.
+    Har request yahan aati hai, result wapas jata hai."""
+    session = None
+    while True:
+        job = _work_queue.get()
+        if job is None:  # shutdown signal
+            if session:
+                try:
+                    session.close()
+                except Exception:
+                    pass
+            return
+        fn_name, args, result_q = job
+        try:
+            if session is None:
+                session = BrowserSession()
+            fn = getattr(session, fn_name)
+            result = fn(**args)
+        except Exception as e:
+            result = f"Browser error: {e}"
+            # session toot gaya ho to agli baar naya banega
+            session = None
+        try:
+            result_q.put(result)
+        except Exception:
+            pass
+
+
+def _dispatch(fn_name: str, timeout: float = 300.0, **kwargs) -> str:
+    """Browser command ko dedicated thread mein bhejo aur result wait karo."""
+    global _worker_thread, _work_queue
     if not _HAS_PW:
-        raise RuntimeError("Playwright install nahi hai. pip install playwright + playwright install chromium")
-    if _session is None:
-        _session = BrowserSession()
-    return _session
-
-
-# ---------- Tool wrappers (tools.py se register hote hain) ----------
-def browser_goto(url: str) -> str:
+        return ("Browser error: Playwright install nahi hai. "
+                "pip install playwright + playwright install chromium (ya python -m playwright install chromium)")
+    # worker thread zinda hai? nahi ho to banao
+    if _worker_thread is None or not _worker_thread.is_alive():
+        _work_queue = _queue_mod.Queue()
+        _worker_thread = threading.Thread(target=_browser_worker, daemon=True)
+        _worker_thread.start()
+    result_q = _queue_mod.Queue()
+    _work_queue.put((fn_name, kwargs, result_q))
     try:
-        return get_session().goto(url)
-    except Exception as e:
-        return f"Browser error: {e}"
+        return result_q.get(timeout=timeout)
+    except Exception:
+        return "Browser error: timeout (300s) — page bohot slow hai"
+
+
+# ---------- Tool wrappers ----------
+def browser_goto(url: str) -> str:
+    return _dispatch("goto", url=url)
 
 def browser_click(target) -> str:
-    try:
-        return get_session().click(target)
-    except Exception as e:
-        return f"Browser error: {e}"
+    return _dispatch("click", target=target)
 
 def browser_type(target, text: str, submit: bool = False) -> str:
-    try:
-        return get_session().type(target, text, submit)
-    except Exception as e:
-        return f"Browser error: {e}"
+    return _dispatch("type", target=target, text=text, submit=submit)
 
 def browser_scroll(direction: str = "down", amount: int = 3) -> str:
-    try:
-        return get_session().scroll(direction, amount)
-    except Exception as e:
-        return f"Browser error: {e}"
+    return _dispatch("scroll", direction=direction, amount=amount)
 
 def browser_press(key: str) -> str:
-    try:
-        return get_session().press(key)
-    except Exception as e:
-        return f"Browser error: {e}"
+    return _dispatch("press", key=key)
 
 def browser_screenshot(path: str = "/tmp/agent_shot.png") -> str:
-    try:
-        return get_session().screenshot(path)
-    except Exception as e:
-        return f"Browser error: {e}"
+    return _dispatch("screenshot", path=path)
