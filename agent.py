@@ -190,6 +190,9 @@ _TOOL_ALIASES = {
     "ls": "list_dir", "dir": "list_dir", "list": "list_dir",
     "save_file": "write_file", "create_file": "write_file", "make_file": "write_file",
     "get_file": "read_file", "cat": "read_file", "open_file": "read_file",
+    "list_files": "list_dir", "files": "list_dir", "ls_files": "list_dir", "dir_list": "list_dir",
+    "download": "download_file", "fetch_file": "download_file", "save_file_url": "download_file",
+    "get_weather": "weather", "wiki": "wikipedia_search", "http": "http_request", "request": "http_request",
 }
 
 

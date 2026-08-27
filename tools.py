@@ -251,7 +251,9 @@ def download_file(url: str, path: str = "downloaded_file") -> str:
                 for chunk in r.iter_bytes():
                     f.write(chunk)
                     total += len(chunk)
-        return f"⬇️ Download complete: {path} ({total//1024} KB)"
+        if total == 0:
+            return f"⚠️ Downloaded file KHALI (0 bytes) hai — URL check karo ya dobara try karo. Agar persistent ho to fetch_url ya run_shell(wget) try karo."
+        return f"⬇️ Download complete: {path} ({total//1024} KB). User ko batao: file server pe save hui hai — browser mein /files/{path} se khul sakti hai."
     except Exception as e:
         return f"Error: {e}"
 
