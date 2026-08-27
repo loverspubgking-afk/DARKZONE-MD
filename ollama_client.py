@@ -15,6 +15,10 @@ GITHUB_MODEL_URL = "https://raw.githubusercontent.com/loverspubgking-afk/DARKZON
 
 def _resolve_url(ollama_url: str | None) -> str:
     """Agar URL khali/'auto' hai to GitHub se latest tunnel link uthao."""
+    # env override sab se pehle (Kaggle notebook ke andar localhost direct)
+    env_ov = os.environ.get("OLLAMA_URL_OVERRIDE", "").strip()
+    if env_ov:
+        return env_ov.rstrip("/")
     u = (ollama_url or "").strip()
     if u and u.lower() != "auto":
         return u.rstrip("/")
