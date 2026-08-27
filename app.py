@@ -256,6 +256,9 @@ function renderChat(){
   let html='';
   for(let m of c.msgs){
     if(m.role==='tool'){html+=renderTool(m);continue;}
+    if(m.role==='narration'){html+=`<div class="msg"><div class="avatar av-bot">${MARK_SVG}</div>
+      <div class="msg-body"><div class="role" style="color:#d97706">🧠 Soch raha hoon</div>
+      <div class="content" style="color:var(--muted);font-style:italic;font-size:13.5px">${md(esc(m.content))}</div></div></div>`;continue;}
     let av=m.role==='user'?`<div class="avatar av-user">You</div>`:`<div class="avatar av-bot">${MARK_SVG}</div>`;
     html+=`<div class="msg">${av}<div class="msg-body"><div class="role">${m.role==='user'?'You':'RED-MIND'}</div>
       <div class="content">${md(esc(m.content))}</div></div></div>`;
@@ -309,6 +312,9 @@ function handleEv(ev,tk){
   if(ev.type==='thinking'){tk.innerHTML='<span class="spinner"></span> RED-MIND kaam kar raha hai... (step '+ev.step+')';
     let last=chats[curId].msgs[chats[curId].msgs.length-1];
     if(!last||last.role!=='tool'&&last.role!=='assistant-pending'){}
+  }else if(ev.type==='narration'){
+    chats[curId].msgs.push({role:'narration',content:ev.text});
+    renderChat();
   }else if(ev.type==='tool_call'){
     let c=chats[curId];c.msgs.push({role:'tool',name:ev.name,args:ev.args});
     renderChat();

@@ -40,6 +40,23 @@ TYPICAL MAPPINGS (use these tools):
   - read/write local files         -> read_file / write_file / list_dir
   - compute math                   -> calculator
 
+═══ BROWSER LOGIN/AUTOMATION PATTERN (human jaisa kaam) ═══
+  1. browser_goto(url) → page khulega, NUMBERED elements list milegi
+  2. Form fields (input boxes) ke number se browser_type(number, "text") karo
+  3. Login/submit button ka number browser_click(number) karo
+  4. Naya page aaye to nayi numbered list padho, aage barho
+  5. Scroll: browser_scroll, screenshots: browser_screenshot
+
+═══ COMMUNICATION STYLE (BOHOT ZAROORI) ═══
+- Har tool call se PEHLE 1-2 lines mein batao: KYA kar rahe ho aur KYUN.
+  Example: "Ab main web_search use karunga kyunki latest chahiye..."
+- Kabhi sirf "tool call" ya raw output mat chhodo — HAMESHA samjhao.
+- FINAL answer mein STRUCTURED REPORT do (professional agent ki tarah):
+  1) KYA KIYA: kaunse tools use kiye
+  2) KYA MILA: important findings
+  3) NATIJA: asal jawab
+  4) AGLA STEP: agar task adhoora ho to kya karna chahiye
+
 AVAILABLE TOOLS:
 {tools}
 
@@ -259,6 +276,15 @@ def run_agent(
             return clean or response
 
         tool_name, tool_args = call
+
+        # narration: tool call se pehle ka samjhane wala text
+        import re as _re
+        m = _re.search(r"<tool>|\[\s*tool_call", response)
+        narration = response[:m.start()].strip() if m else ""
+        narration = _strip_tool_tags(narration).strip()
+        if narration and len(narration) > 10:
+            emit({"type": "narration", "text": narration[:400]})
+
         tool_name = _TOOL_ALIASES.get(tool_name, tool_name)  # alias resolve
         tool_args = _normalize_args(tool_name, tool_args)
         emit({"type": "tool_call", "name": tool_name, "args": tool_args})
