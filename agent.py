@@ -175,6 +175,7 @@ _ARG_ALIASES = {
     "expr": "expression", "eq": "expression", "math": "expression",
     "cmd": "command", "shell": "command",
     "url_to_open": "url", "link": "url", "website": "url", "address": "url",
+    "file": "path", "filename": "path", "filepath": "path", "name": "path",
 }
 
 # model kabhi galat tool naam use kare to canonical naam pe map karo
