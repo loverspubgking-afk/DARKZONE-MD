@@ -146,6 +146,9 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
 .gc{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:16px;width:100%;max-width:400px;text-align:center}
 .gc h3{font-size:13.5px;margin-bottom:10px}
 .gc h3 b{color:var(--red)}
+.ttt{display:grid;grid-template-columns:repeat(3,80px);gap:7px;justify-content:center;margin:10px 0}
+.ttt button{height:80px;border-radius:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:30px;font-weight:800;cursor:pointer}
+.ttt button:hover{border-color:var(--red)}
 .gc canvas{background:#080b10;border:1px solid var(--border);border-radius:11px;touch-action:none;max-width:100%}
 .gbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit}
 .gbtn:hover{border-color:var(--red)}
@@ -211,15 +214,23 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
     <div class="sb2"><span>SCORE <b id="s1">0</b></span><span>BEST <b id="b1">0</b></span></div>
     <button class="gbtn p" onclick="g1start()">▶ Start</button>
     <div class="pad"><span></span><button onclick="g1d(0,-1)">▲</button><span></span><button onclick="g1d(-1,0)">◀</button><button onclick="g1d(0,1)">▼</button><button onclick="g1d(1,0)">▶</button></div></div>
-   <div class="gc"><h3>🏎️ <b>TURBO</b> Racer</h3><canvas id="gc2" width="300" height="340"></canvas>
-    <div class="sb2"><span>SCORE <b id="s2">0</b></span><span>BEST <b id="b2">0</b></span></div>
-    <button class="gbtn p" onclick="g2start()">▶ Start</button>
-    <div class="pad"><span></span><button onclick="g2d(-1)">◀</button><span></span><span></span><button onclick="g2d(1)">▶</button><span></span></div>
-    <p style="color:var(--muted);font-size:10.5px;margin-top:6px">Gari chalao, traffic dodge karo!</p></div>
-   <div class="gc"><h3>🐦 <b>NEON</b> Jump</h3><canvas id="gc3" width="300" height="300"></canvas>
-    <div class="sb2"><span>SCORE <b id="s3">0</b></span><span>BEST <b id="b3">0</b></span></div>
-    <button class="gbtn p" onclick="g3start()">▶ Start</button>
-    <p style="color:var(--muted);font-size:10.5px;margin-top:6px">Tap / button dabao — udte raho!</p></div>
+   <div class="gc"><h3>⭕ <b>TIC</b>-TAC-TOE <span style="color:var(--blue)">(2P)</span></h3>
+    <div class="ttt" id="ttt"></div>
+    <div class="sb2" style="margin:8px 0"><span>Mode: <b id="tttM" style="color:var(--red)">vs AI</b></span><span id="tttMsg">Terminator se!</span></div>
+    <button class="gbtn" onclick="tttMode()">↻ Mode badlo (AI / 2-Player)</button>
+    <button class="gbtn p" onclick="tttNew()">▶ New Game</button></div>
+   <div class="gc"><h3>🏓 <b>PONG</b> DUEL <span style="color:var(--blue)">(2P)</span></h3><canvas id="pongC" width="300" height="300"></canvas>
+    <div class="sb2"><span>🔴 <b id="po1">0</b></span><span id="poMsg">First to 5!</span><span><b id="po2">0</b> 🔵</span></div>
+    <button class="gbtn p" onclick="pongStart()">▶ Start Match</button>
+    <div class="pad"><button onclick="pongM(1,-1)">🔴▲</button><span></span><button onclick="pongM(2,-1)">▲🔵</button><button onclick="pongM(1,1)">🔴▼</button><span></span><button onclick="pongM(2,1)">▼🔵</button></div>
+    <p style="color:var(--muted);font-size:10.5px;margin-top:6px">Keys: P1 = W/S · P2 = ↑/↓</p></div>
+   <div class="gc"><h3>⚡ <b>REACTION</b> DUEL <span style="color:var(--blue)">(2P)</span></h3>
+    <div style="display:flex;height:190px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+     <div id="duelL" onclick="duelTap(1)" style="flex:1;background:#1a0e10;display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer;user-select:none">🔴</div>
+     <div id="duelR" onclick="duelTap(2)" style="flex:1;background:#0e1220;display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer;user-select:none">🔵</div>
+    </div>
+    <div class="sb2" style="margin-top:10px"><span>🔴 <b id="duL">0</b></span><span id="duMsg">GREEN aaye to TAP!</span><span><b id="duR">0</b> 🔵</span></div>
+    <button class="gbtn p" onclick="duelStart()">▶ Start Duel</button></div>
    <div class="gc"><h3>🧱 <b>BRICK</b> Breaker</h3><canvas id="gc4" width="300" height="300"></canvas>
     <div class="sb2"><span>SCORE <b id="s4">0</b></span><span>BEST <b id="b4">0</b></span></div>
     <button class="gbtn p" onclick="g4start()">▶ Start</button>
@@ -335,42 +346,83 @@ $('#b1').textContent=localStorage.getItem('g1')||0;g1draw();
 let t1x=null,t1y=null;c1.addEventListener('touchstart',e=>{t1x=e.touches[0].clientX;t1y=e.touches[0].clientY});
 c1.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-t1x,dy=e.changedTouches[0].clientY-t1y;if(Math.abs(dx)>Math.abs(dy))g1d(dx>0?1:-1,0);else g1d(0,dy>0?1:-1)});
 /* RACER */
-let R={lane:1,obs:[],sc:0,tm:null,dead:true,sp:3};
-const c2=$('#gc2'),x2=c2.getContext('2d');
-function g2start(){clearInterval(R.tm);R={lane:1,obs:[],sc:0,tm:null,dead:false,sp:3};$('#s2').textContent=0;R.tm=setInterval(g2t,50)}
-function g2d(d){if(R.dead)return;R.lane=Math.max(0,Math.min(2,R.lane+d))}
-function g2t(){if(R.dead)return;R.sc+=1;if(R.sc%100===0)R.sp+=.25;$('#s2').textContent=R.sc;
- if(Math.random()<.05+R.sp*.008)R.obs.push({l:~~(Math.random()*3),y:-40});
- R.obs.forEach(o=>o.y+=R.sp);R.obs=R.obs.filter(o=>o.y<360);
- if(R.obs.some(o=>o.l===R.lane&&o.y>240&&o.y<300)){R.dead=true;clearInterval(R.tm);$('#b2').textContent=best('g2',R.sc)}
- g2draw()}
-function g2draw(){x2.fillStyle='#080b10';x2.fillRect(0,0,300,340);
- x2.strokeStyle='#30363d';x2.setLineDash([14,16]);for(let i=1;i<3;i++){x2.beginPath();x2.moveTo(i*100,0);x2.lineTo(i*100,340);x2.stroke()}x2.setLineDash([]);
- R.obs.forEach(o=>{x2.fillStyle='#58a6ff';x2.shadowColor='#58a6ff';x2.shadowBlur=10;x2.fillRect(o.l*100+28,o.y,44,60);x2.shadowBlur=0});
- x2.fillStyle='#f85149';x2.shadowColor='#f85149';x2.shadowBlur=16;x2.fillRect(R.lane*100+24,252,52,64);x2.shadowBlur=0;
- x2.fillStyle='#fff';x2.fillRect(R.lane*100+40,264,20,12);
- if(R.dead){x2.fillStyle='rgba(248,81,73,.95)';x2.font='800 20px Segoe UI';x2.textAlign='center';x2.fillText('CRASHED!',150,160);x2.font='11px Segoe UI';x2.fillStyle='#8b949e';x2.fillText('Restart dabao',150,180)}}
-$('#b2').textContent=localStorage.getItem('g2')||0;g2draw();
-/* FLAPPY */
-let F={y:150,v:0,ps:[],sc:0,tm:null,dead:true};
-const c3=$('#gc3'),x3=c3.getContext('2d');
-function g3start(){clearInterval(F.tm);F={y:150,v:0,ps:[{x:320,g:~~(Math.random()*180)+50}],sc:0,tm:null,dead:false};$('#s3').textContent=0;F.tm=setInterval(g3t,30)}
-function g3jump(){if(!F.dead)F.v=-6.2}
-c3.addEventListener('pointerdown',g3jump);
-function g3t(){if(F.dead)return;F.v+=.42;F.y+=F.v;
- if(F.y<8||F.y>292){F.dead=true;clearInterval(F.tm);$('#b3').textContent=best('g3',F.sc);g3draw();return}
- F.ps.forEach(p=>p.x-=2.6);if(F.ps[F.ps.length-1].x<170)F.ps.push({x:320,g:~~(Math.random()*180)+50});
- F.ps=F.ps.filter(p=>p.x>-60);
- for(const p of F.ps){if(p.x<50&&p.x+52>18&&(F.y-12<p.g||F.y+12>p.g+80)){F.dead=true;clearInterval(F.tm);$('#b3').textContent=best('g3',F.sc)}}
- if(!F.dead){F.ps.forEach(p=>{if(p.x+52<18&&!p.p){p.p=1;F.sc++;$('#s3').textContent=F.sc}})}
- g3draw()}
-function g3draw(){x3.fillStyle='#080b10';x3.fillRect(0,0,300,300);
- F.ps.forEach(p=>{x3.fillStyle='#3fb950';x3.shadowColor='#3fb950';x3.shadowBlur=8;
-  x3.fillRect(p.x,0,52,p.g);x3.fillRect(p.x,p.g+80,52,300);x3.shadowBlur=0});
- x3.fillStyle='#f85149';x3.shadowColor='#f85149';x3.shadowBlur=14;x3.beginPath();x3.arc(18,F.y,11,0,7);x3.fill();x3.shadowBlur=0;
- x3.fillStyle='#fff';x3.beginPath();x3.arc(22,F.y-3,3.5,0,7);x3.fill();
- if(F.dead){x3.fillStyle='rgba(248,81,73,.95)';x3.font='800 20px Segoe UI';x3.textAlign='center';x3.fillText('GAME OVER',150,140);x3.font='11px Segoe UI';x3.fillStyle='#8b949e';x3.fillText('Restart dabao',150,160)}}
-$('#b3').textContent=localStorage.getItem('g3')||0;g3draw();
+/* TIC-TAC-TOE (AI + 2-Player) */
+let TB=Array(9).fill(''),TMY=true,TMODE='ai';
+function tttRender(){let h='';TB.forEach((v,i)=>{h+=`<button onclick="tttMove(${i})">${v==='X'?'<span style="color:var(--red)">'+v+'</span>':v==='O'?'<span style="color:var(--blue)">'+v+'</span>':''}</button>`});$('#ttt').innerHTML=h}
+function tttMode(){TMODE=TMODE==='ai'?'2p':'ai';$('#tttM').textContent=TMODE==='ai'?'vs AI':'2-Player';tttNew()}
+function tttNew(){TB=Array(9).fill('');TMY=true;tttRender();$('#tttMsg').textContent=TMODE==='ai'?'Terminator se!':'X pehle (dono ek saath)'}
+function tttWin(t){const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+ for(const[a,b,c]of L)if(t[a]&&t[a]===t[b]&&t[b]===t[c])return t[a];return t.every(v=>v)?'draw':null}
+function tttEnd(w){$('#tttMsg').innerHTML=w==='X'?'🏆 <b style="color:var(--red)">X jeeta!</b>':w==='O'?'🏆 <b style="color:var(--blue)">O jeeta!</b>':'🤝 Draw!'}
+function tttMove(i){if(TB[i]||tttWin(TB))return;TB[i]='X';tttRender();
+ let w=tttWin(TB);if(w)return tttEnd(w);
+ if(TMODE==='2p'){$('#tttMsg').textContent='O ki baari...';
+  setTimeout(()=>{if(tttWin(TB))return; /* wait O click */},0);
+  // O manual: toggle — O ke liye click ko remap karo
+  TMY=false;tttWaitO();return}
+ setTimeout(()=>{const free=TB.map((v,j)=>v?-1:j).filter(j=>j>=0);if(!free.length)return tttEnd(tttWin(TB)||'draw');
+  let mv=-1;
+  for(const p of['O','X']){for(const j of free){const t=TB.slice();t[j]=p;if(tttWin(t)){if(p==='O'){mv=j;break}else if(mv<0)mv=j}}if(mv>=0&&p==='O')break}
+  if(mv<0)mv=free[~~(Math.random()*free.length)];
+  TB[mv]='O';tttRender();const w2=tttWin(TB);if(w2)tttEnd(w2)},380)}
+function tttWaitO(){/* 2P mode: O click handler */}
+/* 2P: har click alternating X/O */
+function tttMove2(i){if(TB[i]||tttWin(TB))return;const mark=TMY?'X':'O';TB[i]=mark;TMY=!TMY;tttRender();
+ const w=tttWin(TB);if(w)return tttEnd(w);$('#tttMsg').textContent=(TMY?'X':'O')+' ki baari...'}
+tttNew();
+if(TMODE==='2p'){}
+/* PONG 2P */
+const poC=$('#pongC'),poX=poC.getContext('2d');
+let PO={p1:120,p2:120,bx:150,by:150,vx:4,vy:3,s1:0,s2:0,tm:null,on:false};
+function pongStart(){clearInterval(PO.tm);PO={p1:120,p2:120,bx:150,by:150,vx:4,vy:3,s1:0,s2:0,tm:null,on:true};
+ $('#po1').textContent=0;$('#po2').textContent=0;$('#poMsg').textContent='Game ON!';PO.tm=setInterval(pongT,35)}
+function pongM(p,d){if(p===1)PO.p1=Math.max(0,Math.min(240,PO.p1+d*28));else PO.p2=Math.max(0,Math.min(240,PO.p2+d*28))}
+function pongT(){if(!PO.on)return;
+ PO.bx+=PO.vx;PO.by+=PO.vy;
+ if(PO.by<6||PO.by>294)PO.vy*=-1;
+ if(PO.bx<26&&PO.bx>14&&PO.by>PO.p1-8&&PO.by<PO.p1+68&&PO.vx<0){PO.vx=Math.abs(PO.vx)+.3;PO.vy+=((PO.by-(PO.p1+30))/30)}
+ if(PO.bx>274&&PO.bx<286&&PO.by>PO.p2-8&&PO.by<PO.p2+68&&PO.vx>0){PO.vx=-(Math.abs(PO.vx)+.3);PO.vy+=((PO.by-(PO.p2+30))/30)}
+ if(PO.bx<0){PO.s2++;$('#po2').textContent=PO.s2;pongReset()}
+ if(PO.bx>300){PO.s1++;$('#po1').textContent=PO.s1;pongReset()}
+ if(PO.s1>=5||PO.s2>=5){PO.on=false;clearInterval(PO.tm);
+  $('#poMsg').innerHTML=PO.s1>=5?'🏆 <b style="color:var(--red)">PLAYER 1 jeeta!</b>':'🏆 <b style="color:var(--blue)">PLAYER 2 jeeta!</b>'}
+ pongDraw()}
+function pongReset(){PO.bx=150;PO.by=150;PO.vx=(Math.random()<.5?-1:1)*4;PO.vy=(Math.random()-.5)*6}
+function pongDraw(){poX.fillStyle='#080b10';poX.fillRect(0,0,300,300);
+ poX.strokeStyle='#30363d';poX.setLineDash([10,10]);poX.beginPath();poX.moveTo(150,0);poX.lineTo(150,300);poX.stroke();poX.setLineDash([]);
+ poX.fillStyle='#f85149';poX.shadowColor='#f85149';poX.shadowBlur=10;poX.fillRect(14,PO.p1,10,60);poX.shadowBlur=0;
+ poX.fillStyle='#58a6ff';poX.shadowColor='#58a6ff';poX.shadowBlur=10;poX.fillRect(276,PO.p2,10,60);poX.shadowBlur=0;
+ poX.fillStyle='#fff';poX.shadowColor='#fff';poX.shadowBlur=8;poX.beginPath();poX.arc(PO.bx,PO.by,6,0,7);poX.fill();poX.shadowBlur=0}
+pongDraw();
+/* REACTION DUEL 2P */
+let DU={on:false,green:false,timer:null,L:0,R:0};
+function duelStart(){DU.on=true;DU.green=false;
+ $('#duMsg').textContent='READY... RED pe ruko!';
+ $('#duelL').style.background='#1a0e10';$('#duelR').style.background='#0e1220';
+ $('#duelL').textContent='⏳';$('#duelR').textContent='⏳';
+ clearTimeout(DU.timer);
+ DU.timer=setTimeout(()=>{DU.green=true;
+  $('#duelL').style.background='#0f2e18';$('#duelR').style.background='#0f2e18';
+  $('#duelL').textContent='TAP!';$('#duelR').textContent='TAP!';
+  $('#duMsg').textContent='🟢 AB! JALDI DABAO!'},1500+Math.random()*3000)}
+function duelTap(p){if(!DU.on)return;
+ if(!DU.green){ /* false start */
+  DU.on=false;clearTimeout(DU.timer);
+  if(p===1)DU.R++;else DU.L++;
+  $('#duMsg').innerHTML='❌ JALDI! <b>'+(p===1?'Player 2':'Player 1')+'</b> ko point!';
+ }else{
+  DU.on=false;if(p===1)DU.L++;else DU.R++;
+  $('#duMsg').innerHTML='🏆 <b>Player '+p+'</b> jeeta round!';
+ }
+ $('#duL').textContent=DU.L;$('#duR').textContent=DU.R;
+ $('#duelL').textContent='🔴';$('#duelR').textContent='🔵';
+ $('#duelL').style.background='#1a0e10';$('#duelR').style.background='#0e1220'}
+/* TTT click remap: 2P mode mein tttMove2 use ho */
+document.getElementById('ttt').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(TMODE!=='2p')return;
+ const idx=[...document.querySelectorAll('#ttt button')].indexOf(b);
+ if(idx>=0){e.stopImmediatePropagation();tttMove2(idx)}},true);
 /* BREAKOUT */
 let B={px:130,bx:150,by:220,vx:3,vy:-3.4,br:[],sc:0,tm:null,dead:true};
 const c4=$('#gc4'),x4=c4.getContext('2d');
@@ -395,8 +447,12 @@ function g4draw(){x4.fillStyle='#080b10';x4.fillRect(0,0,300,300);
  if(B.dead){x4.fillStyle='rgba(248,81,73,.95)';x4.font='800 20px Segoe UI';x4.textAlign='center';x4.fillText('GAME OVER',150,140)}}
 $('#b4').textContent=localStorage.getItem('g4')||0;g4draw();
 addEventListener('keydown',e=>{if(document.querySelector('#v-games.active')){
- if(e.key==='ArrowUp')g1d(0,-1);if(e.key==='ArrowDown')g1d(0,1);if(e.key==='ArrowLeft'){g1d(-1,0);g2d(-1);g4d(-1)}if(e.key==='ArrowRight'){g1d(1,0);g2d(1);g4d(1)}
- if(e.key===' '){e.preventDefault();g3jump()}}});
+ if(e.key==='ArrowUp'){g1d(0,-1);pongM(2,-1)}
+ if(e.key==='ArrowDown'){g1d(0,1);pongM(2,1)}
+ if(e.key==='ArrowLeft'){g1d(-1,0);g4d(-1)}
+ if(e.key==='ArrowRight'){g1d(1,0);g4d(1)}
+ if(e.key==='w'||e.key==='W')pongM(1,-1);
+ if(e.key==='s'||e.key==='S')pongM(1,1)}});
 /* BG */
 const cv=$('#bg'),cx=cv.getContext('2d');let P=[];
 function rs(){cv.width=innerWidth;cv.height=innerHeight}addEventListener('resize',rs);rs();
