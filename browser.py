@@ -47,6 +47,7 @@ class BrowserSession:
     """Ek persistent browser session. Module-level singleton."""
 
     def __init__(self):
+        from playwright.sync_api import sync_playwright
         self._pw = sync_playwright().start()
         args = ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
         self.browser = self._pw.chromium.launch(headless=True, args=args)
@@ -223,10 +224,19 @@ def _browser_worker():
             pass
 
 
+def _pw_available() -> bool:
+    """Runtime check — install ke baad bhi chale (import-time flag nahi)."""
+    try:
+        from playwright.sync_api import sync_playwright  # noqa
+        return True
+    except Exception:
+        return False
+
+
 def _dispatch(fn_name: str, timeout: float = 300.0, **kwargs) -> str:
     """Browser command ko dedicated thread mein bhejo aur result wait karo."""
     global _worker_thread, _work_queue
-    if not _HAS_PW:
+    if not _pw_available():
         return ("Browser error: Playwright install nahi hai. "
                 "pip install playwright + playwright install chromium (ya python -m playwright install chromium)")
     # worker thread zinda hai? nahi ho to banao
