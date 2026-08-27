@@ -88,7 +88,8 @@ def _build_system_prompt() -> str:
     tools_desc = "\n".join(
         f"  - {name}: {info['desc']}" for name, info in TOOL_REGISTRY.items()
     )
-    return SYSTEM_PROMPT.format(tools=tools_desc)
+    # .format() nahi — prompt mein JSON braces hain (KeyError se bachne ke liye)
+    return SYSTEM_PROMPT.replace("{tools}", tools_desc)
 
 
 def _safe_json(s: str):
