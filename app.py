@@ -11,6 +11,8 @@ from notrack_client import chat as simple_chat
 import os as _os
 
 from fastapi.middleware.cors import CORSMiddleware
+import time as _tm
+BOOT_T = _tm.time()
 app = FastAPI(title="RED-MIND")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
@@ -423,7 +425,7 @@ async def index():
 
 @app.get("/api/health")
 async def health():
-    return JSONResponse({"status": "ok", "agent": "red-mind", "uncensored": True})
+    return JSONResponse({"status": "ok", "agent": "red-mind", "uncensored": True, "uptime": int(_tm.time() - BOOT_T)})
 
 
 @app.get("/api/activity")
