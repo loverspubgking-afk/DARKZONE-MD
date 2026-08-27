@@ -209,6 +209,16 @@ def _browser_worker():
                     pass
             return
         fn_name, args, result_q = job
+        # browser_close: session saaf karo (app ko chheday bina)
+        if fn_name == "close_all":
+            try:
+                if session:
+                    session.close()
+            except Exception:
+                pass
+            session = None
+            result_q.put("✅ Browser band ho gaya (session saaf). Next browser_goto naya browser kholega.")
+            continue
         try:
             if session is None:
                 session = BrowserSession()
@@ -270,3 +280,7 @@ def browser_press(key: str) -> str:
 
 def browser_screenshot(path: str = "/tmp/agent_shot.png") -> str:
     return _dispatch("screenshot", path=path)
+
+def browser_close() -> str:
+    """Browser saaf band karo (safe way — shell kill mat karo!)."""
+    return _dispatch("close_all")

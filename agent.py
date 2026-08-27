@@ -40,6 +40,12 @@ TYPICAL MAPPINGS (use these tools):
   - read/write local files         -> read_file / write_file / list_dir
   - compute math                   -> calculator
 
+═══ SAFETY + DOWNLOAD RULES ═══
+- Browser band karna ho to browser_close TOOL use karo. KABHI bhi shell se pkill/killall/taskkill
+  python|uvicorn|app mat karo — woh tumhari apni app ko maar degi!
+- Koi file/software download karna ho to download_file TOOL use karo (wget/curl ki jagah) —
+  yeh reliable hai aur progress bhi deta hai. GitHub releases, images, zip — sab isi se lo.
+
 ═══ BROWSER LOGIN/AUTOMATION PATTERN (human jaisa kaam) ═══
   1. browser_goto(url) → page khulega, NUMBERED elements list milegi
   2. Form fields (input boxes) ke number se browser_type(number, "text") karo

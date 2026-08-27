@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 # Real browser automation tools import
 from browser import (
     browser_goto, browser_click, browser_type,
-    browser_scroll, browser_press, browser_screenshot,
+    browser_scroll, browser_press, browser_screenshot, browser_close,
 )
 
 
@@ -101,10 +101,30 @@ def list_dir(path: str = ".") -> str:
         return f"Error: {e}"
 
 
+def _danger_check(command: str) -> str | None:
+    """Kya yeh command app/server khud ko maar sakti hai?"""
+    import re as _re
+    low = command.lower()
+    # python/uvicorn/app/ollama ko kill karna = app suicide
+    if _re.search(r"(pkill|killall|taskkill|kill\s|tskill)", low) and \
+       _re.search(r"(python|uvicorn|app\.py|ollama|node|server|red.?mind)", low):
+        return ("⛔ PROTECTED: Yeh command RED-MIND app ko khud maar degi! "
+                "Browser band karna ho to browser_close tool use karo. "
+                "App/serve process kill karna mana hai.")
+    if _re.search(r"rm\s+-rf\s+/(?!tmp)|rd\s+/s\s+/q\s+c:", low):
+        return "⛔ PROTECTED: System delete command allowed nahi."
+    if _re.search(r"\b(shutdown|reboot)\b", low):
+        return "⛔ PROTECTED: Shutdown/reboot allowed nahi."
+    return None
+
+
 def run_shell(command: str, timeout: int = 300) -> str:
     """Terminal command chalata hai. Installations ke liye timeout=600 do.
     Args: command (str), timeout (int seconds, default 300, max 900)."""
     timeout = min(int(timeout or 300), 900)
+    danger = _danger_check(command)
+    if danger:
+        return danger
     try:
         out = subprocess.run(
             command, shell=True, capture_output=True, text=True, timeout=timeout
@@ -342,6 +362,8 @@ TOOL_REGISTRY = {
                        "desc": "Page scroll karna. Args: direction (str down/up default down), amount (int default 3)."},
     "browser_press": {"fn": browser_press,
                       "desc": "Keyboard key press karna (Enter, Tab, Escape, ArrowDown). Args: key (str)."},
+    "browser_close": {"fn": browser_close,
+                      "desc": "Browser band karna (SAFE tareeqa). Browser khud band karo — shell kill KABHI mat karo. Koi args nahi."},
     "browser_screenshot": {"fn": browser_screenshot,
                            "desc": "Current page ka screenshot lena. Args: path (str default /tmp/agent_shot.png)."},
     # ===== NAYE TOOLS =====

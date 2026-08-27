@@ -188,7 +188,7 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
  </div>
  <div class="view active" id="v-chat">
   <div class="msgs" id="msgs"><div class="mi" id="msgsInner"></div></div>
-  <div class="waitbar" id="waitbar"><span class="spin"></span><span id="waitTxt">Agent kaam kar raha hai...</span><button onclick="setTab('games')">🎮 Games KHELO</button></div>
+  <div class="waitbar" id="waitbar"><span class="spin"></span><span id="waitTxt">Agent kaam kar raha hai...</span><button onclick="stopTask()" style="background:linear-gradient(135deg,#6e7681,#30363d)">⛔ STOP</button><button onclick="setTab('games')">🎮 Games KHELO</button></div>
   <div class="input-area">
    <div class="ib"><textarea id="inp" rows="1" placeholder="Message RED-MIND..." autocomplete="off"></textarea>
    <button class="sb" id="send" onclick="doSend()" disabled>➤</button></div>
@@ -254,23 +254,33 @@ function renderC(){const c=chats[curId];if(!c)return;
   const av=m.role==='user'?'<div class="av u">YOU</div>':`<div class="av b">${LOGO}</div>`;
   h+=`<div class="msg">${av}<div class="bubble"><div class="who">${m.role==='user'?'You':'RED-MIND'}</div><div class="content">${md(esc(m.content))}</div></div></div>`}
  msgsInner.innerHTML=h;$('#msgs').scrollTop=9e6;updateWait()}
+let wTimer=null;
 function updateWait(){const c=chats[curId];const w=$('#waitbar');
- if(c&&c.busy){w.classList.add('show');$('#waitTxt').textContent='⏳ Agent kaam kar raha hai — '+(c.title.slice(0,30)||'task')+'...'}
- else w.classList.remove('show')}
+ if(c&&c.busy){w.classList.add('show');
+  $('#waitTxt').textContent='⏳ Command mil gaya! Agent kaam kar raha hai — '+(c.title.slice(0,26)||'task')+'...';
+  clearInterval(wTimer);
+  wTimer=setInterval(()=>{if(chats[curId]&&chats[curId].busy&&chats[curId].t0){
+   const s=Math.floor((Date.now()-chats[curId].t0)/1000);
+   $('#waitTxt').textContent='⏳ '+s+'s — Agent kaam kar raha hai — '+(chats[curId].title.slice(0,22)||'task')+'...'}},1000)}
+ else{w.classList.remove('show');clearInterval(wTimer)}}
+function stopTask(){const c=chats[curId];if(c&&c.ctrl){try{c.ctrl.abort()}catch(e){}}}
 function quick(b){inp.value=b.textContent.replace(/^[^\w]+/,'');inp.dispatchEvent(new Event('input'));doSend()}
 async function doSend(){const text=inp.value.trim();if(!text)return;
  if(!curId||!chats[curId])newChat();const c=chats[curId];if(c.busy)return;
- c.busy=true;c.msgs.push({role:'user',content:text});
+ c.busy=true;c.t0=Date.now();c.ctrl=new AbortController();c.msgs.push({role:'user',content:text});
  if(c.title==='New Task')c.title=text.slice(0,36);
  inp.value='';inp.style.height='auto';send.disabled=true;save();renderS();renderC();
  const hist=c.msgs.filter(m=>m.role==='user'||m.role==='assistant').slice(0,-1).map(m=>({role:m.role,content:m.content}));
  try{const resp=await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},
+  signal:c.ctrl.signal,
   body:JSON.stringify({message:text,history:hist,model:modelSel.value,ollamaUrl:ourl.value.trim(),title:c.title})});
   const reader=resp.body.getReader(),dec=new TextDecoder();let buf='';
   while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
    const ls=buf.split('\n');buf=ls.pop();
    for(const l of ls){if(!l.startsWith('data:'))continue;try{const ev=JSON.parse(l.slice(5).trim());hEv(ev,c)}catch(e){}}}
- }catch(err){c.msgs.push({role:'assistant',content:'⚠️ Network error: '+err.message})}
+ }catch(err){
+  if(err.name==='AbortError'){c.msgs.push({role:'assistant',content:'⛔ Task stopped (user ne cancel kiya). Naya task bhejo jab ready ho.'})}
+  else{c.msgs.push({role:'assistant',content:'⚠️ Network error: '+err.message})}}
  c.busy=false;save();renderS();renderC();inp.focus()}
 function hEv(ev,c){
  if(ev.type==='tool_call'){c.msgs.push({role:'tool',name:ev.name,args:ev.args})}
