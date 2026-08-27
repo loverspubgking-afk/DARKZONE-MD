@@ -170,7 +170,7 @@ def _extract_tool_call(text: str):
 
 
 _ARG_ALIASES = {
-    "index": "target", "id": "target", "element": "target", "n": "target", "number": "target",
+    "index": "target", "id": "target", "element": "target", "n": "target", "number": "target", "element_number": "target", "element_id": "target", "element_num": "target", "click_number": "target", "elem": "target", "btn": "target", "button": "target", "link_number": "target",
     "q": "query", "search": "query", "search_query": "query",
     "expr": "expression", "eq": "expression", "math": "expression",
     "cmd": "command", "shell": "command",
