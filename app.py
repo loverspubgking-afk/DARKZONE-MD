@@ -249,7 +249,14 @@ inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDef
 const modelSel=$('#modelSel'),ourl=$('#ollamaUrl');
 modelSel.addEventListener('change',()=>{ourl.style.display=modelSel.value==='ollama'?'block':'none'});
 ourl.value=localStorage.getItem('rm4u')||'';ourl.addEventListener('change',()=>localStorage.setItem('rm4u',ourl.value.trim()));
-const save=()=>localStorage.setItem('rm4',JSON.stringify(chats));
+const save=()=>{localStorage.setItem('rm4',JSON.stringify(chats));saveCloud()};
+let _sc=null;
+function saveCloud(){clearTimeout(_sc);_sc=setTimeout(()=>{try{
+ fetch((BASE||'')+'/api/chats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chats:chats})})}catch(e){}},2500)}
+async function loadCloud(){try{const r=await fetch((BASE||'')+'/api/chats');const d=await r.json();
+ if(d.chats&&Object.keys(d.chats).length&&!Object.keys(chats).length){
+  chats=d.chats;localStorage.setItem('rm4',JSON.stringify(chats));renderS();renderC()}}catch(e){}}
+loadCloud();
 function newChat(){curId='c'+Date.now();chats[curId]={title:'New Task',msgs:[],created:Date.now(),busy:false};save();renderS();renderC();closeSidebar();inp.focus()}
 function openChat(id){curId=id;save();renderS();renderC();closeSidebar()}
 function delChat(id,e){e.stopPropagation();delete chats[id];if(curId===id)curId=Object.keys(chats)[0]||null;if(!curId)newChat();else{save();renderS();renderC()}}
@@ -477,6 +484,27 @@ if(!Object.keys(chats).length)newChat();else{if(!curId||!chats[curId])curId=Obje
 @app.get("/")
 async def index():
     return HTMLResponse(HTML_PAGE)
+
+
+@CHAT_STORE = "chats_backup.json"
+
+@app.get("/api/chats")
+async def get_chats():
+    try:
+        if _os.path.exists(CHAT_STORE):
+            return JSONResponse({"chats": _json.load(open(CHAT_STORE, encoding="utf-8"))})
+    except Exception:
+        pass
+    return JSONResponse({"chats": {}})
+
+@app.post("/api/chats")
+async def save_chats(req: Request):
+    try:
+        data = await req.json()
+        _json.dump(data.get("chats", {}), open(CHAT_STORE, "w", encoding="utf-8"))
+        return JSONResponse({"ok": True})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.get("/api/health")
