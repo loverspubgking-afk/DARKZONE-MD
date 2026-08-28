@@ -165,7 +165,7 @@ class BrowserSession:
         """Clickable elements ko number do aur page ka MAIN text return karo."""
         try:
             self.page.evaluate("""() => {
-                const els = document.querySelectorAll('a, button, input[type=submit], input[type=button], [role=button], summary, [onclick]');
+                const els = document.querySelectorAll('a, button, input[type=submit], input[type=button], [role=button], summary, [onclick], input[type=text], input[type=email], input[type=password], input[type=number], input[type=search], input[type=url], input[type=tel]:not([data-agent-label]), textarea:not([data-agent-label]), select');
                 let i = 1;
                 els.forEach(el => {
                     // nav/header/footer/aside ke andar wale skip karo (sirf main content)
@@ -185,8 +185,15 @@ class BrowserSession:
             items = self.page.evaluate("""() => {
                 const out = [];
                 document.querySelectorAll('[data-agent-id]').forEach(el => {
-                    const t = (el.innerText || el.getAttribute('aria-label') ||
-                               el.getAttribute('placeholder') || el.getAttribute('title') || '').trim().slice(0, 50);
+                    const tag = el.tagName.toLowerCase();
+                    let t = '';
+                    if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+                        t = '[FIELD: ' + (el.getAttribute('placeholder') || el.getAttribute('name') || el.getAttribute('id') || el.type || 'input') + '] ' + (el.value || '');
+                    } else {
+                        t = (el.innerText || el.getAttribute('aria-label') ||
+                             el.getAttribute('placeholder') || el.getAttribute('title') || '');
+                    }
+                    t = t.trim().slice(0, 60);
                     const tag = el.tagName.toLowerCase();
                     const href = el.getAttribute('href') || '';
                     out.push({id: el.getAttribute('data-agent-id'), tag, text: t, href});
