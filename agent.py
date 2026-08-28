@@ -63,7 +63,7 @@ Rushing causes errors — OBSERVE skip mat karo.
 🔍 KYA MILA: asal findings/data
 ✅ NATIJA: seedha jawab
 ➡️ AGLA STEP: sirf agar kuch bacha ho
-Roman Urdu agar user Roman Urdu use kare. Concise, no filler.
+Roman Urdu agar user Roman Urdu use kare — LEKIN hamesha LATIN/English script mein likho (Devanagari/Hindi script कभी नहीं). Concise, no filler.
 
 ═══ SERVER IDENTITY (yaad rakh) ═══
 - Tum khud Kaggle server pe chal rahe ho. Server start/stop tum NAHI kar sakte — woh Arena chat ka kaam hai.
@@ -183,12 +183,12 @@ def _extract_tool_call(text: str):
 
 
 _ARG_ALIASES = {
-    "index": "target", "id": "target", "element": "target", "n": "target", "number": "target", "element_number": "target", "element_id": "target", "element_num": "target", "click_number": "target", "elem": "target", "btn": "target", "button": "target", "link_number": "target",
+    "index": "target", "id": "target", "element": "target", "n": "target", "number": "target", "element_number": "target", "field": "target", "selector": "target", "input": "target", "input_field": "target", "form_field": "target", "box": "target", "element_id": "target", "element_num": "target", "click_number": "target", "elem": "target", "btn": "target", "button": "target", "link_number": "target",
     "q": "query", "search": "query", "search_query": "query",
     "expr": "expression", "eq": "expression", "math": "expression",
     "cmd": "command", "shell": "command",
     "url_to_open": "url", "link": "url", "website": "url", "address": "url",
-    "file": "path", "filename": "path", "filepath": "path", "name": "path",
+    "file": "path", "filename": "path", "file_name": "path", "filepath": "path", "name": "path",
 }
 
 # model kabhi galat tool naam use kare to canonical naam pe map karo

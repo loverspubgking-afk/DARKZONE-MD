@@ -70,13 +70,57 @@ class BrowserSession:
     def click(self, target) -> str:
         """target: number id (1,2,3...) ya CSS selector."""
         sel = self._resolve_selector(target)
-        self.page.click(sel)
+        try:
+            self.page.click(sel)
+        except Exception:
+            sel2 = self._find_by_label(target)
+            if sel2:
+                self.page.click(sel2)
+            else:
+                raise
         self.page.wait_for_timeout(1000)
         return self._snapshot()
 
+    def _find_by_label(self, target) -> str | None:
+        """Target agar text label hai (number/CSS nahi) to input field dhundo."""
+        import json as _j
+        label = str(target).strip().lower()
+        if label.isdigit() or ("[" in label) or ("#" in label) or ("." in label[:2]):
+            return None
+        try:
+            found = self.page.evaluate(
+                """(label) => {
+                const inputs = document.querySelectorAll('input, textarea, select');
+                let i = 900;
+                for (const el of inputs) {
+                    const ph = ((el.placeholder||'') + ' ' + (el.name||'') + ' ' + (el.id||'') + ' '
+                                + (el.getAttribute('aria-label')||'') + ' ' + (el.value||'')).toLowerCase();
+                    const lbl = (el.labels && el.labels[0]) ? el.labels[0].innerText.toLowerCase() : '';
+                    if (ph.includes(label) || lbl.includes(label)) {
+                        el.setAttribute('data-agent-label', 'y');
+                        return true;
+                    }
+                    i++;
+                }
+                return false;
+            }""", label)
+            if found:
+                return '[data-agent-label="y"]'
+        except Exception:
+            pass
+        return None
+
     def type(self, target, text: str, submit: bool = False) -> str:
         sel = self._resolve_selector(target)
-        self.page.fill(sel, text)
+        try:
+            self.page.fill(sel, text)
+        except Exception:
+            # number/CSS fail? label se dhundo
+            sel2 = self._find_by_label(target)
+            if sel2:
+                self.page.fill(sel2, text)
+            else:
+                raise
         if submit:
             self.page.press(sel, "Enter")
             self.page.wait_for_timeout(1500)
