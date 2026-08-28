@@ -252,6 +252,8 @@ def _clean_think(text: str) -> str:
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
     text = re.sub(r"<think>.*", "", text, flags=re.DOTALL)
     text = text.replace("</think>", "")
+    # leading Chinese/Japanese thinking garbage (CJK) strip
+    text = re.sub(r"^[\u4e00-\u9fff\u3040-\u30ff\s]+", "", text)
     return text
 
 
