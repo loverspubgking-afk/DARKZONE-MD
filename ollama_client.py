@@ -94,7 +94,10 @@ def chat(
                 continue
             r.raise_for_status()
             data = r.json()
-            return (data.get("message", {}).get("content", "") or "").strip()
+            msg = data.get("message", {}) or {}
+            # qwen3 kabhi content khaali chhod kar thinking mein sab likhta hai
+            out = msg.get("content") or msg.get("thinking") or ""
+            return str(out).strip()
         except httpx.HTTPStatusError as e:
             return f"[Ollama error {e.response.status_code}: {e.response.text[:200]}]"
         except Exception as e:

@@ -84,10 +84,18 @@ def chat(
         if not removed:
             break  # history khatam, ab system/current bacha hai
 
-    # agar abhi bhi zyada ho (current ya system bohot bada) to unhe truncate karo
+    # SYSTEM prompt ko cap karo (user message HAMESHA bacha rahe)
+    for i, (kind, txt) in enumerate(segs):
+        if kind == "sys" and len(txt) > 1800:
+            segs[i] = ("sys", txt[:280] + "\n[...instructions trimmed...]\n" + txt[-1400:])
+    # agar abhi bhi zyada ho to truncate
     full = "".join(s[1] for s in segs)
     if len(full) > max_chars:
-        full = full[:max_chars]
+        # cur (user message) protect karo — pehle sys/hist kaato
+        cur_txt = segs[-1][1] if segs and segs[-1][0] == "cur" else ""
+        budget = max_chars - len(cur_txt)
+        rest = "".join(s[1] for s in segs[:-1])
+        full = rest[max(0, len(rest) - budget):] + cur_txt
 
     full_input = full
 
