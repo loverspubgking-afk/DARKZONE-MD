@@ -492,7 +492,7 @@ CHAT_STORE = "chats_backup.json"
 async def get_chats():
     try:
         if _os.path.exists(CHAT_STORE):
-            return JSONResponse({"chats": _json.load(open(CHAT_STORE, encoding="utf-8"))})
+            return JSONResponse({"chats": json.load(open(CHAT_STORE, encoding="utf-8"))})
     except Exception:
         pass
     return JSONResponse({"chats": {}})
@@ -501,7 +501,7 @@ async def get_chats():
 async def save_chats(req: Request):
     try:
         data = await req.json()
-        _json.dump(data.get("chats", {}), open(CHAT_STORE, "w", encoding="utf-8"))
+        json.dump(data.get("chats", {}), open(CHAT_STORE, "w", encoding="utf-8"))
         return JSONResponse({"ok": True})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
