@@ -486,7 +486,7 @@ async def index():
     return HTMLResponse(HTML_PAGE)
 
 
-@CHAT_STORE = "chats_backup.json"
+CHAT_STORE = "chats_backup.json"
 
 @app.get("/api/chats")
 async def get_chats():
