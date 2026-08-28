@@ -247,7 +247,16 @@ def _execute_tool(name: str, args: dict) -> str:
         return f"[Tool error: {e}]"
 
 
+def _clean_think(text: str) -> str:
+    """qwen3 ke <think>...</think> aur stray </think> hatao."""
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    text = re.sub(r"<think>.*", "", text, flags=re.DOTALL)
+    text = text.replace("</think>", "")
+    return text
+
+
 def _strip_tool_tags(text: str) -> str:
+    text = _clean_think(text)
     text = re.sub(r"<tool>.*?</tool>", "", text, flags=re.DOTALL)
     text = re.sub(r"<tool_call>.*?</tool_call>", "", text, flags=re.DOTALL)
     text = re.sub(r"<function=[^>]*>.*?</function>", "", text, flags=re.DOTALL)
