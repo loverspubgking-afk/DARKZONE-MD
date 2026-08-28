@@ -172,7 +172,11 @@ class BrowserSession:
                     if (el.closest('nav, header, footer, aside, .sidebar, .navbox, .mw-jump-link')) return;
                     const r = el.getBoundingClientRect();
                     if (r.width === 0 || r.height === 0) return;
-                    const t = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('placeholder') || '').trim();
+                    const tg = el.tagName.toLowerCase();
+                    let t = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.getAttribute('title') || '').trim();
+                    if (!t && (tg === 'input' || tg === 'textarea' || tg === 'select')) {
+                        t = '[FIELD] ' + (el.getAttribute('name') || el.getAttribute('id') || el.type || 'field');
+                    }
                     if (!t) return;
                     el.setAttribute('data-agent-id', i++);
                 });
@@ -194,7 +198,6 @@ class BrowserSession:
                              el.getAttribute('placeholder') || el.getAttribute('title') || '');
                     }
                     t = t.trim().slice(0, 60);
-                    const tag = el.tagName.toLowerCase();
                     const href = el.getAttribute('href') || '';
                     out.push({id: el.getAttribute('data-agent-id'), tag, text: t, href});
                 });
