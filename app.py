@@ -258,7 +258,7 @@ inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDef
 const modelSel=$('#modelSel'),ourl=$('#ollamaUrl');
 modelSel.addEventListener('change',()=>{ourl.style.display=modelSel.value==='ollama'?'block':'none'});
 ourl.value=localStorage.getItem('rm4u')||'';ourl.addEventListener('change',()=>localStorage.setItem('rm4u',ourl.value.trim()));
-const save=()=>{localStorage.setItem('rm4',JSON.stringify(chats));saveCloud()};
+const save=()=>{localStorage.setItem('rm4',JSON.stringify(chats));if(curId)localStorage.setItem('rm4c',curId);saveCloud()};
 let _sc=null;
 function saveCloud(){if(location.hostname.indexOf('vercel')>=0&&!BASE){setTimeout(saveCloud,4000);return}clearTimeout(_sc);_sc=setTimeout(()=>{try{
  fetch((BASE||'')+'/api/chats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chats:chats})})}catch(e){}},2500)}
@@ -282,6 +282,7 @@ function renderC(){const c=chats[curId];if(!c)return;
   if(m.role==='narration'){h+=`<div class="msg"><div class="av b">${LOGO}</div><div class="bubble glass"><div class="who" style="color:var(--purple)">🧠 Thinking</div><div class="content" style="color:var(--muted);font-style:italic;font-size:13px">${md(esc(m.content))}</div></div></div>`;continue}
   const av=m.role==='user'?'<div class="av u">YOU</div>':`<div class="av b">${LOGO}</div>`;
   h+=`<div class="msg">${av}<div class="bubble glass"><div class="who">${m.role==='user'?'You':'RED-MIND'}</div><div class="content">${md(esc(m.content))}</div></div></div>`}
+ h=h.replace(/Image ban gayi: ([\w\-\.]+\.(?:jpg|png|jpeg))/g,'Image ban gayi: $1<br><img src="'+(BASE||'')+'/files/$1" style="max-width:270px;border-radius:10px;border:1px solid var(--border);margin-top:6px;display:block">');
  msgsInner.innerHTML=h;$('#msgs').scrollTop=9e6;updateWait()}
 let wTimer=null;
 function updateWait(){const c=chats[curId];const w=$('#waitbar');
