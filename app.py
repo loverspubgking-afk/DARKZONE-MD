@@ -207,6 +207,11 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
    <div class="mc"><div class="m-top"><span class="ld"></span> LIVE MISSION FEED</div>
     <div class="m-title">🎯 Agent ki har harkat real-time</div>
     <div style="font-size:11.5px;color:var(--muted);margin-top:6px" id="mStat">Idle — Chat mein task bhejo, yahan tree banti jayegi</div></div>
+   <div class="mc" style="margin-bottom:12px"><div class="m-top"><span class="ld"></span> AGENT COMPANY MODE</div>
+    <div class="m-title" style="font-size:15px">🏢 Poora team kaam karwayein</div>
+    <div class="ib" style="margin:10px 0 0"><input id="coTask" placeholder="Task do: e.g. website banao (boss + workers)" style="font-size:14px;background:none;border:none;outline:none;color:var(--text);flex:1">
+     <button class="sb" onclick="runCompany()">➤</button></div></div>
+   <div id="coFeed" style="margin-bottom:14px"></div>
    <div class="tree" id="tree"><div class="spine"></div></div>
   </div>
  </div>
@@ -474,6 +479,27 @@ for(let i=0;i<42;i++)P.push({x:Math.random()*innerWidth,y:Math.random()*innerHei
   for(let j=i+1;j<P.length;j++){const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,d=dx*dx+dy*dy;
    if(d<14000){cx.strokeStyle='rgba(248,81,73,'+(.1*(1-d/14000))+')';cx.beginPath();cx.moveTo(P[i].x,P[i].y);cx.lineTo(P[j].x,P[j].y);cx.stroke()}}}
  requestAnimationFrame(bg)})();
+let coBusy=false;
+async function runCompany(){
+ if(coBusy)return;const t=document.getElementById('coTask').value.trim();if(!t)return;
+ coBusy=true;const feed=document.getElementById('coFeed');feed.innerHTML='';
+ const add=(cls,html)=>{const d=document.createElement('div');d.className='lrow '+cls;d.style.margin='0 0 7px';d.innerHTML=html;feed.appendChild(d)};
+ add('t-thinking','🧠 <b>BOSS</b> task soch raha hai... <span class="spin"></span>');
+ try{const r=await fetch('/api/company',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:t})});
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+  while(true){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
+   const ls=buf.split('\n');buf=ls.pop();
+   for(const l of ls){if(!l.startsWith('data:'))continue;try{
+    const e=JSON.parse(l.slice(5).trim());
+    if(e.type==='boss_plan'){add('t-thinking','🧠 <b>BOSS PLAN:</b> '+e.subtasks.length+' subtasks → '+e.subtasks.map(s=>s.role).join(', '))}
+    else if(e.type==='worker_start'){add('t-tool','👷 <b>'+(e.worker||e.role)+'</b> START: '+esc(e.task||''))}
+    else if(e.type==='worker_done'){add('t-answer','✅ <b>'+(e.worker||e.role)+'</b> DONE: '+esc(String(e.result).slice(0,140)))}
+    else if(e.type==='boss_review'){add('t-thinking','🧠 BOSS review kar raha hai...')}
+    else if(e.type==='final'){add('t-answer','<b>🏁 FINAL REPORT:</b><br>'+md(esc(e.text)))}
+    else if(e.type==='error'){add('t-answer','⚠️ '+esc(e.text))}
+   }catch(x){}}}
+ }catch(err){add('t-answer','⚠️ '+err.message)}
+ coBusy=false}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function md(s){return s.replace(/```([\s\S]*?)```/g,(m,c)=>'<pre>'+c.replace(/^\n/,'')+'</pre>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}
 function openSidebar(){$('#sidebar').classList.add('open');$('#scrim').classList.add('show')}
