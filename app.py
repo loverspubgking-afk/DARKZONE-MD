@@ -7,6 +7,7 @@ import json, asyncio, threading, queue, time
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse, FileResponse
 from agent import run_agent
+from agent_company import orchestrate
 from notrack_client import chat as simple_chat
 import os as _os
 
@@ -531,6 +532,45 @@ async def save_key(req: Request):
         return JSONResponse({"ok": True})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/company")
+async def company_endpoint(req: Request):
+    data = await req.json()
+    message = data.get("message", "")
+    worker_model = data.get("workerModel", "omni")
+
+    async def event_stream():
+        q: queue.Queue = queue.Queue()
+        done_flag = {"v": False}
+
+        def on_event(ev):
+            q.put(ev)
+            try:
+                log_activity(ev, "Company")
+            except Exception:
+                pass
+
+        def worker():
+            try:
+                orchestrate(message, on_event=on_event, worker_model=worker_model)
+            except Exception as e:
+                q.put({"type": "error", "text": str(e)})
+            finally:
+                done_flag["v"] = True
+
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+        while True:
+            try:
+                ev = q.get(timeout=0.3)
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+            except queue.Empty:
+                if done_flag["v"]:
+                    break
+                await asyncio.sleep(0.05)
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 @app.get("/api/health")
