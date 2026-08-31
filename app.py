@@ -366,6 +366,18 @@ c1.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-t1x,dy=e
 /* RACER */
 /* TIC-TAC-TOE (AI + 2-Player) */
 let TB=Array(9).fill(''),TMY=true,TMODE='ai';
+function mini(b,isO){const w=tttWin?tttWin(b):tttWin2(b);
+ if(w==='O')return 1;if(w==='X')return -1;if(w)return 0;
+ let best=isO?-2:2;
+ for(let j of b.map((v,i)=>v?-1:i).filter(i=>i>=0)){
+  b[j]=isO?'O':'X';const s=mini(b,!isO);b[j]='';
+  best=isO?Math.max(best,s):Math.min(best,s)}
+ return best}
+function bestMove(b){let best=-2,mv=-1;
+ for(let j of b.map((v,i)=>v?-1:i).filter(i=>i>=0)){
+  b[j]='O';const s=mini(b,false);b[j]='';
+  if(s>best){best=s;mv=j}}
+ return mv}
 function tttRender(){let h='';TB.forEach((v,i)=>{h+=`<button onclick="tttMove(${i})">${v==='X'?'<span style="color:var(--red)">'+v+'</span>':v==='O'?'<span style="color:var(--blue)">'+v+'</span>':''}</button>`});$('#ttt').innerHTML=h}
 function tttMode(){TMODE=TMODE==='ai'?'2p':'ai';$('#tttM').textContent=TMODE==='ai'?'vs AI':'2-Player';tttNew()}
 function tttNew(){TB=Array(9).fill('');TMY=true;tttRender();$('#tttMsg').textContent=TMODE==='ai'?'Terminator se!':'X pehle (dono ek saath)'}
@@ -381,7 +393,7 @@ function tttMove(i){if(TB[i]||tttWin(TB))return;TB[i]='X';tttRender();
  setTimeout(()=>{const free=TB.map((v,j)=>v?-1:j).filter(j=>j>=0);if(!free.length)return tttEnd(tttWin(TB)||'draw');
   let mv=-1;
   for(const p of['O','X']){for(const j of free){const t=TB.slice();t[j]=p;if(tttWin(t)){if(p==='O'){mv=j;break}else if(mv<0)mv=j}}if(mv>=0&&p==='O')break}
-  if(mv<0)mv=free[~~(Math.random()*free.length)];
+  if(mv<0)mv=bestMove(tb.slice());if(mv<0&&free.length)mv=free[0];
   TB[mv]='O';tttRender();const w2=tttWin(TB);if(w2)tttEnd(w2)},380)}
 function tttWaitO(){/* 2P mode: O click handler */}
 /* 2P: har click alternating X/O */
