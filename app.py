@@ -186,9 +186,10 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
    <button class="tab" data-v="mission" onclick="setTab('mission')">⚡ Mission</button>
    <button class="tab" data-v="games" onclick="setTab('games')">🎮 Arcade</button>
   </div>
+  <button onclick="addKey()" title="API Key" style="border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px">🔑</button>
   <input type="text" id="ollamaUrl" class="ollama-url" placeholder="GPU link (optional)">
   <select class="t-model" id="modelSel">
-   <option value="ollama">🧠 Neural 14B</option><option value="C">NoTrack</option><option value="B">ChatGPT</option><option value="A">Minimax</option>
+   <option value="omni">⚡ OmniRoute FREE</option><option value="ollama">🧠 Neural 14B</option><option value="C">NoTrack</option><option value="B">ChatGPT</option><option value="A">Minimax</option>
   </select>
  </div>
  <div class="view active" id="v-chat">
@@ -311,6 +312,8 @@ function hEv(ev,c){
  renderC()}
 /* MISSION (real events) */
 let missionNodes=[];
+function addKey(){const p=prompt('Provider naam (openrouter/groq/minimax):');if(!p)return;const k=prompt('API key paste karo:');if(!k)return;
+fetch('/api/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:p,key:k})}).then(r=>r.json()).then(d=>alert(d.ok?'Key save: '+p:'Error: '+(d.error||''))).catch(e=>alert('Net: '+e.message))}
 function setTab(v){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));$('#v-'+v).classList.add('active');
  clearInterval(lt);if(v==='mission'){lt=setInterval(pollMission,2000);pollMission()}}
@@ -545,7 +548,7 @@ async def agent_endpoint(req: Request):
     history = data.get("history", [])
     model = data.get("model", "C")
     title = data.get("title", "")[:40]
-    backend = "ollama" if model == "ollama" else "notrack"
+    backend = "omniroute" if model == "omni" else ("ollama" if model == "ollama" else "notrack")
     ollama_url = data.get("ollamaUrl") or None
 
     async def event_stream():
