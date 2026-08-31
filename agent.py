@@ -269,6 +269,8 @@ def _strip_tool_tags(text: str) -> str:
     text = re.sub(r"\[\s*TOOL_RESULT\s*\].*", "", text, flags=re.DOTALL)
     text = re.sub(r"\[\s*tool_result\s*\].*", "", text, flags=re.DOTALL)
     text = re.sub(r"\[\s*tool_call\s*\].*", "", text, flags=re.DOTALL)
+    text = re.sub(r"\[\s*(TOOL_RESULT|FINAL ANSWER|USER|ASSISTANT|INSTRUCTIONS)\s*\]", "", text)
+    text = re.sub(r"</?think>", "", text)
     return text.strip()
 
 

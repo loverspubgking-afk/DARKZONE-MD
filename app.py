@@ -258,11 +258,12 @@ inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDef
 const modelSel=$('#modelSel'),ourl=$('#ollamaUrl');
 modelSel.addEventListener('change',()=>{ourl.style.display=modelSel.value==='ollama'?'block':'none'});
 ourl.value=localStorage.getItem('rm4u')||'';ourl.addEventListener('change',()=>localStorage.setItem('rm4u',ourl.value.trim()));
+const DID=localStorage.getItem('rmDID')||('d'+Math.random().toString(36).slice(2,10));localStorage.setItem('rmDID',DID);
 const save=()=>{localStorage.setItem('rm4',JSON.stringify(chats));if(curId)localStorage.setItem('rm4c',curId);saveCloud()};
 let _sc=null;
 function saveCloud(){if(location.hostname.indexOf('vercel')>=0&&!BASE){setTimeout(saveCloud,4000);return}clearTimeout(_sc);_sc=setTimeout(()=>{try{
- fetch((BASE||'')+'/api/chats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chats:chats})})}catch(e){}},2500)}
-async function loadCloud(){try{const r=await fetch((BASE||'')+'/api/chats');const d=await r.json();
+ fetch((BASE||'')+'/api/chats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chats:chats,did:DID})})}catch(e){}},2500)}
+async function loadCloud(){try{const r=await fetch((BASE||'')+'/api/chats?did='+DID);const d=await r.json();
  if(d.chats&&Object.keys(d.chats).length&&!Object.keys(chats).length){
   chats=d.chats;localStorage.setItem('rm4',JSON.stringify(chats));renderS();renderC()}}catch(e){}}
 loadCloud();
@@ -322,7 +323,7 @@ function hEv(ev,c){
 /* MISSION (real events) */
 let missionNodes=[];
 function addKey(){const p=prompt('Provider naam (openrouter/groq/minimax):');if(!p)return;const k=prompt('API key paste karo:');if(!k)return;
-fetch('/api/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:p,key:k})}).then(r=>r.json()).then(d=>alert(d.ok?'Key save: '+p:'Error: '+(d.error||''))).catch(e=>alert('Net: '+e.message))}
+fetch((BASE||'')+'/api/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:p,key:k})}).then(r=>r.json()).then(d=>alert(d.ok?'Key save: '+p:'Error: '+(d.error||''))).catch(e=>alert('Net: '+e.message))}
 function setTab(v){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));$('#v-'+v).classList.add('active');
  clearInterval(lt);if(v==='mission'){lt=setInterval(pollMission,2000);pollMission()}}
@@ -599,6 +600,10 @@ async def company_endpoint(req: Request):
                 q.put({"type": "error", "text": str(e)})
             finally:
                 done_flag["v"] = True
+                try:
+                    RUNNING.discard(rid)
+                except Exception:
+                    pass
 
         t = threading.Thread(target=worker, daemon=True)
         t.start()
