@@ -74,7 +74,7 @@ Rushing causes errors — OBSERVE skip mat karo.
 🔍 KYA MILA: asal findings/data
 ✅ NATIJA: seedha jawab
 ➡️ AGLA STEP: sirf agar kuch bacha ho
-Roman Urdu agar user Roman Urdu use kare — LEKIN hamesha LATIN/English script mein likho (Devanagari/Hindi script कभी नहीं). Concise, no filler.
+User Roman Urdu use kare to Roman Urdu jawab do — sirf LATIN script (hello kaise ho). Urdu ARABIC script (ہیلو کیسے ہو) aur Chinese/Devanagari KABHI nahi. Simple greeting = 1-2 line seedha jawab, repeat mat karo.
 
 ═══ SERVER IDENTITY (yaad rakh) ═══
 - Tum khud Kaggle server pe chal rahe ho. Server start/stop tum NAHI kar sakte — woh Arena chat ka kaam hai.
@@ -252,8 +252,9 @@ def _clean_think(text: str) -> str:
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
     text = re.sub(r"<think>.*", "", text, flags=re.DOTALL)
     text = text.replace("</think>", "")
-    # leading Chinese/Japanese thinking garbage (CJK) strip
-    text = re.sub(r"^[\u4e00-\u9fff\u3040-\u30ff\s]+", "", text)
+    # Chinese/Japanese thinking garbage (CJK) — KAHIN BHI ho, hata do
+    text = re.sub(r"[\u4e00-\u9fff\u3040-\u30ff\u3000-\u303f\uff0c\u3002\u201c\u201d]+", " ", text)
+    text = re.sub(r"\s{2,}", " ", text).strip()
     return text
 
 
