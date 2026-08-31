@@ -286,6 +286,10 @@ def run_agent(
     original_task = user_input  # hamesha yaad rahe
 
     def _llm(u, h, s):
+        if backend == "omniroute":
+            from omniroute_client import chat as omni_chat
+            m = "auto" if model in ("omni", "") else model
+            return omni_chat(u, history=h, system_prompt=s, model=m)
         if backend == "ollama":
             return ollama_chat(u, history=h, system_prompt=s, ollama_url=ollama_url)
         return notrack_chat(u, history=h, system_prompt=s, model=model)
