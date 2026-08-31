@@ -393,7 +393,7 @@ function tttMove(i){if(TB[i]||tttWin(TB))return;TB[i]='X';tttRender();
  setTimeout(()=>{const free=TB.map((v,j)=>v?-1:j).filter(j=>j>=0);if(!free.length)return tttEnd(tttWin(TB)||'draw');
   let mv=-1;
   for(const p of['O','X']){for(const j of free){const t=TB.slice();t[j]=p;if(tttWin(t)){if(p==='O'){mv=j;break}else if(mv<0)mv=j}}if(mv>=0&&p==='O')break}
-  if(mv<0)mv=bestMove(tb.slice());if(mv<0&&free.length)mv=free[0];
+  if(mv<0)mv=bestMove(TB.slice());if(mv<0&&free.length)mv=free[0];
   TB[mv]='O';tttRender();const w2=tttWin(TB);if(w2)tttEnd(w2)},380)}
 function tttWaitO(){/* 2P mode: O click handler */}
 /* 2P: har click alternating X/O */
