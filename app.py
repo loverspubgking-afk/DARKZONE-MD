@@ -510,6 +510,29 @@ async def save_chats(req: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.get("/api/keys")
+async def get_keys():
+    try:
+        if _os.path.exists("api_keys.json"):
+            return JSONResponse({"providers": list(json.load(open("api_keys.json")).keys())})
+    except Exception:
+        pass
+    return JSONResponse({"providers": []})
+
+@app.post("/api/keys")
+async def save_key(req: Request):
+    try:
+        data = await req.json()
+        ks = {}
+        if _os.path.exists("api_keys.json"):
+            ks = json.load(open("api_keys.json"))
+        ks[str(data.get("provider", ""))] = str(data.get("key", ""))
+        json.dump(ks, open("api_keys.json", "w"))
+        return JSONResponse({"ok": True})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.get("/api/health")
 async def health():
     return JSONResponse({"status": "ok", "agent": "red-mind", "uncensored": True, "uptime": int(_tm.time() - BOOT_T)})
