@@ -201,7 +201,7 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
   <div class="input-area glass">
    <div class="ib glass"><textarea id="inp" rows="1" placeholder="Message RED-MIND..." autocomplete="off"></textarea>
    <button class="sb" id="send" onclick="doSend()" disabled>➤</button></div>
-   <div class="memnote">Memory ON · parallel tasks (dusre chat mein bhejo jab yeh busy ho) · Enter = send</div>
+   <div class="memnote">Memory: is chat tak · parallel tasks (dusre chat mein bhejo jab yeh busy ho) · Enter = send</div>
   </div>
  </div>
  <div class="view" id="v-mission">
@@ -260,7 +260,7 @@ modelSel.addEventListener('change',()=>{ourl.style.display=modelSel.value==='oll
 ourl.value=localStorage.getItem('rm4u')||'';ourl.addEventListener('change',()=>localStorage.setItem('rm4u',ourl.value.trim()));
 const save=()=>{localStorage.setItem('rm4',JSON.stringify(chats));saveCloud()};
 let _sc=null;
-function saveCloud(){clearTimeout(_sc);_sc=setTimeout(()=>{try{
+function saveCloud(){if(location.hostname.indexOf('vercel')>=0&&!BASE){setTimeout(saveCloud,4000);return}clearTimeout(_sc);_sc=setTimeout(()=>{try{
  fetch((BASE||'')+'/api/chats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chats:chats})})}catch(e){}},2500)}
 async function loadCloud(){try{const r=await fetch((BASE||'')+'/api/chats');const d=await r.json();
  if(d.chats&&Object.keys(d.chats).length&&!Object.keys(chats).length){
@@ -473,7 +473,7 @@ function g4t(){if(B.dead)return;
 function g4draw(){x4.fillStyle='#080b10';x4.fillRect(0,0,300,300);
  B.br.forEach(b=>{if(b.on){x4.fillStyle=['#f85149','#d29922','#3fb950','#58a6ff'][~~(b.y/20)%4];x4.shadowColor=x4.fillStyle;x4.shadowBlur=6;x4.fillRect(b.x,b.y,44,12);x4.shadowBlur=0}});
  x4.fillStyle='#e6edf3';x4.shadowColor='#fff';x4.shadowBlur=8;x4.fillRect(B.px,288,60,7);x4.shadowBlur=0;
- x4.fillStyle='#f85149';x3.shadowBlur=0;x4.beginPath();x4.arc(B.bx,B.by,6,0,7);x4.fill();
+ x4.fillStyle='#f85149';x4.shadowBlur=0;x4.beginPath();x4.arc(B.bx,B.by,6,0,7);x4.fill();
  if(B.dead){x4.fillStyle='rgba(248,81,73,.95)';x4.font='800 20px Segoe UI';x4.textAlign='center';x4.fillText('GAME OVER',150,140)}}
 $('#b4').textContent=localStorage.getItem('g4')||0;g4draw();
 addEventListener('keydown',e=>{if(document.querySelector('#v-games.active')){
@@ -493,7 +493,7 @@ for(let i=0;i<42;i++)P.push({x:Math.random()*innerWidth,y:Math.random()*innerHei
   for(let j=i+1;j<P.length;j++){const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,d=dx*dx+dy*dy;
    if(d<14000){cx.strokeStyle='rgba(248,81,73,'+(.1*(1-d/14000))+')';cx.beginPath();cx.moveTo(P[i].x,P[i].y);cx.lineTo(P[j].x,P[j].y);cx.stroke()}}}
  requestAnimationFrame(bg)})();
-let coBusy=false;
+var coBusy=false;
 async function runCompany(){
  if(coBusy)return;const t=document.getElementById('coTask').value.trim();if(!t)return;
  coBusy=true;const feed=document.getElementById('coFeed');feed.innerHTML='';
