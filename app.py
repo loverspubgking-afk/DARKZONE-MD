@@ -50,7 +50,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
 :root{--bg:#0d1117;--surface:#161b22;--surface2:#1c2129;--border:#30363d;--text:#e6edf3;--muted:#8b949e;
 --red:#f85149;--red-dark:#b62324;--green:#3fb950;--blue:#58a6ff;--orange:#d29922;--purple:#bc8cff;--glow:0 0 20px rgba(248,81,73,.35)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-html,body{height:100%;overflow:hidden}
+html,body{background:linear-gradient(-45deg,#0d1117,#180f14,#0d1117,#1a0d12);background-size:400% 400%;animation:mesh 16s ease infinite;color:var(--text);font-family:-apple-system,'Segoe UI',Roboto,sans-serif;overflow:hidden}
+@keyframes mesh{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.glass{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(22,27,34,.6)!important;border:1px solid rgba(255,255,255,.07)}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
 #bg{position:fixed;inset:0;z-index:0;opacity:.45}
 .app{position:relative;z-index:1;display:flex;height:100vh}
@@ -180,9 +182,9 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
 </aside>
 <div class="scrim" id="scrim" onclick="closeSidebar()"></div>
 <div class="main">
- <div class="topbar">
+ <div class="topbar glass">
   <button class="menu-btn" onclick="openSidebar()">☰</button>
-  <div class="tabs">
+  <div class="tabs glass">
    <button class="tab active" data-v="chat" onclick="setTab('chat')">💬 Chat</button>
    <button class="tab" data-v="mission" onclick="setTab('mission')">⚡ Mission</button>
    <button class="tab" data-v="games" onclick="setTab('games')">🎮 Arcade</button>
@@ -196,20 +198,20 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
  <div class="view active" id="v-chat">
   <div class="msgs" id="msgs"><div class="mi" id="msgsInner"></div></div>
   <div class="waitbar" id="waitbar"><span class="spin"></span><span id="waitTxt">Agent kaam kar raha hai...</span><button onclick="stopTask()" style="background:linear-gradient(135deg,#6e7681,#30363d)">⛔ STOP</button><button onclick="setTab('games')">🎮 Games KHELO</button></div>
-  <div class="input-area">
-   <div class="ib"><textarea id="inp" rows="1" placeholder="Message RED-MIND..." autocomplete="off"></textarea>
+  <div class="input-area glass">
+   <div class="ib glass"><textarea id="inp" rows="1" placeholder="Message RED-MIND..." autocomplete="off"></textarea>
    <button class="sb" id="send" onclick="doSend()" disabled>➤</button></div>
    <div class="memnote">Memory ON · parallel tasks (dusre chat mein bhejo jab yeh busy ho) · Enter = send</div>
   </div>
  </div>
  <div class="view" id="v-mission">
   <div class="mission-wrap">
-   <div class="mc"><div class="m-top"><span class="ld"></span> LIVE MISSION FEED</div>
+   <div class="mc glass"><div class="m-top"><span class="ld"></span> LIVE MISSION FEED</div>
     <div class="m-title">🎯 Agent ki har harkat real-time</div>
     <div style="font-size:11.5px;color:var(--muted);margin-top:6px" id="mStat">Idle — Chat mein task bhejo, yahan tree banti jayegi</div></div>
    <div class="mc" style="margin-bottom:12px"><div class="m-top"><span class="ld"></span> AGENT COMPANY MODE</div>
     <div class="m-title" style="font-size:15px">🏢 Poora team kaam karwayein</div>
-    <div class="ib" style="margin:10px 0 0"><input id="coTask" placeholder="Task do: e.g. website banao (boss + workers)" style="font-size:14px;background:none;border:none;outline:none;color:var(--text);flex:1">
+    <div class="ib glass" style="margin:10px 0 0"><input id="coTask" placeholder="Task do: e.g. website banao (boss + workers)" style="font-size:14px;background:none;border:none;outline:none;color:var(--text);flex:1">
      <button class="sb" onclick="runCompany()">➤</button></div></div>
    <div id="coFeed" style="margin-bottom:14px"></div>
    <div class="tree" id="tree"><div class="spine"></div></div>
@@ -217,28 +219,28 @@ textarea{flex:1;background:none;border:none;color:var(--text);font-size:16px;fon
  </div>
  <div class="view" id="v-games">
   <div class="games-wrap">
-   <div class="gc"><h3>🐍 <b>NEON</b> Snake</h3><canvas id="gc1" width="300" height="300"></canvas>
+   <div class="gc glass"><h3>🐍 <b>NEON</b> Snake</h3><canvas id="gc1" width="300" height="300"></canvas>
     <div class="sb2"><span>SCORE <b id="s1">0</b></span><span>BEST <b id="b1">0</b></span></div>
     <button class="gbtn p" onclick="g1start()">▶ Start</button>
     <div class="pad"><span></span><button onclick="g1d(0,-1)">▲</button><span></span><button onclick="g1d(-1,0)">◀</button><button onclick="g1d(0,1)">▼</button><button onclick="g1d(1,0)">▶</button></div></div>
-   <div class="gc"><h3>⭕ <b>TIC</b>-TAC-TOE <span style="color:var(--blue)">(2P)</span></h3>
+   <div class="gc glass"><h3>⭕ <b>TIC</b>-TAC-TOE <span style="color:var(--blue)">(2P)</span></h3>
     <div class="ttt" id="ttt"></div>
     <div class="sb2" style="margin:8px 0"><span>Mode: <b id="tttM" style="color:var(--red)">vs AI</b></span><span id="tttMsg">Terminator se!</span></div>
     <button class="gbtn" onclick="tttMode()">↻ Mode badlo (AI / 2-Player)</button>
     <button class="gbtn p" onclick="tttNew()">▶ New Game</button></div>
-   <div class="gc"><h3>🏓 <b>PONG</b> DUEL <span style="color:var(--blue)">(2P)</span></h3><canvas id="pongC" width="300" height="300"></canvas>
+   <div class="gc glass"><h3>🏓 <b>PONG</b> DUEL <span style="color:var(--blue)">(2P)</span></h3><canvas id="pongC" width="300" height="300"></canvas>
     <div class="sb2"><span>🔴 <b id="po1">0</b></span><span id="poMsg">First to 5!</span><span><b id="po2">0</b> 🔵</span></div>
     <button class="gbtn p" onclick="pongStart()">▶ Start Match</button>
     <div class="pad"><button onclick="pongM(1,-1)">🔴▲</button><span></span><button onclick="pongM(2,-1)">▲🔵</button><button onclick="pongM(1,1)">🔴▼</button><span></span><button onclick="pongM(2,1)">▼🔵</button></div>
     <p style="color:var(--muted);font-size:10.5px;margin-top:6px">Keys: P1 = W/S · P2 = ↑/↓</p></div>
-   <div class="gc"><h3>⚡ <b>REACTION</b> DUEL <span style="color:var(--blue)">(2P)</span></h3>
+   <div class="gc glass"><h3>⚡ <b>REACTION</b> DUEL <span style="color:var(--blue)">(2P)</span></h3>
     <div style="display:flex;height:190px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
      <div id="duelL" onclick="duelTap(1)" style="flex:1;background:#1a0e10;display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer;user-select:none">🔴</div>
      <div id="duelR" onclick="duelTap(2)" style="flex:1;background:#0e1220;display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer;user-select:none">🔵</div>
     </div>
     <div class="sb2" style="margin-top:10px"><span>🔴 <b id="duL">0</b></span><span id="duMsg">GREEN aaye to TAP!</span><span><b id="duR">0</b> 🔵</span></div>
     <button class="gbtn p" onclick="duelStart()">▶ Start Duel</button></div>
-   <div class="gc"><h3>🧱 <b>BRICK</b> Breaker</h3><canvas id="gc4" width="300" height="300"></canvas>
+   <div class="gc glass"><h3>🧱 <b>BRICK</b> Breaker</h3><canvas id="gc4" width="300" height="300"></canvas>
     <div class="sb2"><span>SCORE <b id="s4">0</b></span><span>BEST <b id="b4">0</b></span></div>
     <button class="gbtn p" onclick="g4start()">▶ Start</button>
     <div class="pad"><button onclick="g4d(-1)">◀</button><span></span><button onclick="g4d(1)">▶</button></div></div>
@@ -276,10 +278,10 @@ function renderC(){const c=chats[curId];if(!c)return;
  if(!c.msgs.length){h=`<div class="empty" style="padding-top:36px"><div style="width:70px;height:70px;margin:0 auto 12px;filter:drop-shadow(0 0 14px rgba(248,81,73,.5))">${LOGO}</div><h2 style="font-size:21px;color:var(--text)">RED·MIND <span style="font-size:12px;color:var(--muted)">v4 Neural</span></h2><p style="font-size:12.5px;margin-top:7px">Uncensored agent — search, browser, code, tools<br>Wait lage to 🎮 Arcade kholo!</p><div class="sug"><button onclick="quick(this)">🔍 Mausam search karo</button><button onclick="quick(this)">🖥️ System report banao</button><button onclick="quick(this)">🖼️ AI image banao</button><button onclick="quick(this)">🧮 Calculator test</button></div></div>`}
  for(const m of c.msgs){
   if(m.role==='tool'){let b=esc(typeof m.args==='string'?m.args:JSON.stringify(m.args));if(m.result)b+='\n── RESULT ──\n'+esc(String(m.result).slice(0,600));
-   h+=`<div class="toolcard" onclick="this.classList.toggle('open')"><div class="tc-h">🔧 ${esc(m.name)} <span style="margin-left:auto;opacity:.5">▶</span></div><div class="tc-b">${b}</div></div>`;continue}
-  if(m.role==='narration'){h+=`<div class="msg"><div class="av b">${LOGO}</div><div class="bubble"><div class="who" style="color:var(--purple)">🧠 Thinking</div><div class="content" style="color:var(--muted);font-style:italic;font-size:13px">${md(esc(m.content))}</div></div></div>`;continue}
+   h+=`<div class="toolcard glass" onclick="this.classList.toggle('open')"><div class="tc-h">🔧 ${esc(m.name)} <span style="margin-left:auto;opacity:.5">▶</span></div><div class="tc-b">${b}</div></div>`;continue}
+  if(m.role==='narration'){h+=`<div class="msg"><div class="av b">${LOGO}</div><div class="bubble glass"><div class="who" style="color:var(--purple)">🧠 Thinking</div><div class="content" style="color:var(--muted);font-style:italic;font-size:13px">${md(esc(m.content))}</div></div></div>`;continue}
   const av=m.role==='user'?'<div class="av u">YOU</div>':`<div class="av b">${LOGO}</div>`;
-  h+=`<div class="msg">${av}<div class="bubble"><div class="who">${m.role==='user'?'You':'RED-MIND'}</div><div class="content">${md(esc(m.content))}</div></div></div>`}
+  h+=`<div class="msg">${av}<div class="bubble glass"><div class="who">${m.role==='user'?'You':'RED-MIND'}</div><div class="content">${md(esc(m.content))}</div></div></div>`}
  msgsInner.innerHTML=h;$('#msgs').scrollTop=9e6;updateWait()}
 let wTimer=null;
 function updateWait(){const c=chats[curId];const w=$('#waitbar');
@@ -336,7 +338,7 @@ async function pollMission(){try{const r=await fetch('/api/activity');const a=aw
   else if(e.type==='tool_result'){ic='📋';nm='Result';cls='dn'}
   else if(e.type==='answer'){ic='✅';nm='Complete';cls='dn'}
   el.className='node '+cls;
-  el.innerHTML=`<div class="n-ico">${ic}</div><div class="n-body"><div class="n-head"><span class="n-name">${esc(nm)}</span>
+  el.innerHTML=`<div class="n-ico">${ic}</div><div class="n-body glass"><div class="n-head"><span class="n-name">${esc(nm)}</span>
    <span class="n-chip ${cls==='dn'?'chip-done':'chip-run'}">${cls==='dn'?'✓':'RUN'}</span></div>
    <div class="n-det">${esc(e.text)}</div></div>`;
   tr.appendChild(el);
