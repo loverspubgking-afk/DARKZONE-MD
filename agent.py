@@ -280,9 +280,12 @@ def run_agent(
     model: str = "C",
     backend: str = "notrack",
     ollama_url: str | None = None,
+    system_prompt: str | None = None,
 ) -> str:
     history = list(history) if history else []
     sysp = _build_system_prompt()
+    if system_prompt:
+        sysp += "\n\n═══ YOUR ROLE (worker) ═══\n" + system_prompt
     original_task = user_input  # hamesha yaad rahe
 
     def _llm(u, h, s):
