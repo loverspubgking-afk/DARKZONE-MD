@@ -320,6 +320,20 @@ def browser_close() -> str:
     return "OK — browser band"
 
 
+
+# ---------------- MEMORY (agent khud yaad rakhta hai) ----------------
+
+def save_memory(fact: str) -> str:
+    """Important cheez hamesha ke liye yaad karo (user ki pasand/naam/kaam). Args: fact"""
+    from memory import add_fact
+    return add_fact(fact)
+
+
+def recall() -> str:
+    """Apni sari yaad dekho (jo tumne save kiya + jo user ne bataya). Args: none"""
+    from memory import get_user_memory
+    return get_user_memory() or "[abhi kuch yaad nahi]"
+
 # ---------------- REGISTRY ----------------
 
 TOOL_REGISTRY = {
@@ -356,7 +370,7 @@ _FUNCS = {
     "generate_image": generate_image, "speak": speak,
     "browser_open": browser_open, "browser_list": browser_list,
     "browser_click": browser_click, "browser_type": browser_type,
-    "browser_read": browser_read, "browser_close": browser_close,
+    "browser_read": browser_read, "browser_close": browser_close, "save_memory": save_memory, "recall": recall,
 }
 
 # name aliases (model galat naam bole to)
