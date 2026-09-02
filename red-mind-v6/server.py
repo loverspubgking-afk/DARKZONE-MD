@@ -19,10 +19,10 @@ from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 from brain import run_agent
 from company import orchestrate
 from omni import chat as omni_chat
-from memory import get_user_memory, set_user_memory
+from memory import get_user_memory, set_user_memory, get_all, add_fact
 
 START = time.time()
-APP_VERSION = "6.0.0"
+APP_VERSION = "6.1.0"
 KEYS_FILE = "api_keys.json"
 CHATS_FILE = "chats.json"
 ACTIVITY_MAX = 120
@@ -49,8 +49,18 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 @app.get("/api/health")
 async def health():
+    import httpx
+    ollama_ok = False
+    model = ""
+    try:
+        r = httpx.get("http://127.0.0.1:11434/api/tags", timeout=3)
+        models = r.json().get("models", [])
+        ollama_ok = bool(models)
+        model = models[0].get("name", "") if models else ""
+    except Exception:
+        pass
     return {"status": "ok", "version": APP_VERSION, "uptime": int(time.time() - START),
-            "memory": bool(get_user_memory())}
+            "memory": bool(get_user_memory()), "ollama_ready": ollama_ok, "ollama_model": model}
 
 
 @app.post("/api/agent")
@@ -187,7 +197,8 @@ async def save_key(req: Request):
 
 @app.get("/api/memory")
 async def get_memory():
-    return {"memory": get_user_memory()}
+    d = get_all()
+    return {"memory": d["user_memory"], "facts": d["facts"]}
 
 
 @app.post("/api/memory")
@@ -195,6 +206,54 @@ async def set_memory(req: Request):
     data = await req.json()
     mem = set_user_memory(data.get("memory", ""))
     return {"ok": True, "memory": mem}
+
+
+@app.post("/api/fact")
+async def add_fact_ep(req: Request):
+    data = await req.json()
+    res = add_fact(data.get("fact", ""))
+    return {"ok": True, "result": res}
+
+
+@app.post("/api/multitask")
+async def multitask_endpoint(req: Request):
+    """Ek se 4 tasks EK SAATH — parallel agents."""
+    from concurrent.futures import ThreadPoolExecutor
+    data = await req.json()
+    tasks = [t.strip() for t in data.get("tasks", []) if t.strip()][:4]
+    model = data.get("model", "omni")
+    q = queue.Queue()
+    state = {"done": False}
+
+    def run_one(i, t):
+        q.put({"type": "task_start", "task": i, "text": t})
+        def ev(e):
+            q.put({**e, "task": i})
+            log_activity(e, f"[T{i+1}] {t[:30]}")
+        try:
+            ans = run_agent(t, on_event=ev, model=model)
+            q.put({"type": "task_done", "task": i, "text": ans or "(koi jawab nahi)"})
+        except Exception as e:
+            q.put({"type": "task_done", "task": i, "text": f"[error] {e}"})
+
+    def worker():
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            list(pool.map(lambda a: run_one(*a), list(enumerate(tasks))))
+        state["done"] = True
+
+    threading.Thread(target=worker, daemon=True).start()
+
+    def gen():
+        while True:
+            try:
+                ev = q.get(timeout=0.4)
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+            except queue.Empty:
+                if state["done"]:
+                    break
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream")
 
 
 @app.get("/api/activity")
