@@ -76,7 +76,7 @@ STEP_REMINDER = (
     "Rule #1: ACT, DON'T ASK."
 )
 
-MAX_STEPS = 16
+MAX_STEPS = 20
 RESULT_LIMIT = 1500  # purana system 700 par katata tha — ab zyada context
 
 
@@ -202,7 +202,13 @@ def run_agent(user_input, history=None, *, on_event=None, model="omni",
         history.append({"role": "tool", "content": compact})
         current = f"[TASK] {task}\n\n[LAST RESULT — {name}]\n{compact}\n\n{STEP_REMINDER}{nudge}"
 
-    ans = clean_think(last_answer)
+    # SMART WRAP-UP: steps khatam? ek final call mein best jawab banwao
+    try:
+        wrap = llm("[STEPS KHATAM] Ab jo bhi mila hai, uska BEST FINAL ANSWER do — "
+                   "jo adhura hai wo saaf batao. Naya tool call NAHI — seedha jawab.", STEP_REMINDER)
+        ans = clean_think(wrap) or last_answer
+    except Exception:
+        ans = clean_think(last_answer)
     emit({"type": "answer", "text": ans or "[max steps]"})
     return ans
 
