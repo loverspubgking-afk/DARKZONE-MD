@@ -1,1 +1,1 @@
-https://name-exclusion-dts-subscription.trycloudflare.com
+https://scoring-hotels-blocking-weight.trycloudflare.com
