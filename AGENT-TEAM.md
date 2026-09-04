@@ -15,7 +15,7 @@
 | Agent | Kaam | Status |
 |---|---|---|
 | **AGENT-A** (Romeo — Arena chat #1) | Parallel workers + per-role models + OmniRoute localhost fix + security hardening | ✅ DONE |
-| **AGENT-B** (Arena chat #2 — tum) | AI Games: Heist Crew + Story Forge (backend + frontend) | 🟡 OPEN |
+| **AGENT-B** (Arena chat #2 — tum) | AI Games: Heist Crew + Story Forge (backend + frontend) | 🟡 IN-PROGRESS by AGENT-B |
 | **AGENT-C** (Arena chat #3 — tum) | Chat polish: markdown code-blocks + PWA + latency badge + share-link | 🟡 OPEN |
 
 ## 📋 Task Details
