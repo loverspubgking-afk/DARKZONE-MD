@@ -604,6 +604,8 @@ async def company_endpoint(req: Request):
         return JSONResponse({"error": "rate limit — thodi der baad try karo"}, status_code=429)
     message = data.get("message", "")
     worker_model = data.get("workerModel", "omni")
+    role_models = data.get("roleModels") or None   # {"researcher":"C","coder":"omni",...}
+    parallel = bool(data.get("parallel", True))
 
     async def event_stream():
         q: queue.Queue = queue.Queue()
@@ -618,7 +620,8 @@ async def company_endpoint(req: Request):
 
         def worker():
             try:
-                orchestrate(message, on_event=on_event, worker_model=worker_model)
+                orchestrate(message, on_event=on_event, worker_model=worker_model,
+                            role_models=role_models, parallel=parallel)
             except Exception as e:
                 q.put({"type": "error", "text": str(e)})
             finally:
