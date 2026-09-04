@@ -347,6 +347,34 @@ h1{font-size:clamp(40px,6.5vw,72px);line-height:1.05;font-weight:800;letter-spac
   .stchip .tlabel{display:none}
   .waitpill{bottom:calc(16px + env(safe-area-inset-bottom))}
 }
+
+/* ═════════ AI GAMES — real interactive panels (AGENT-B) ═════════ */
+.aig-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 8px}
+@media (max-width:760px){.aig-grid{grid-template-columns:1fr}}
+.gpanel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:12px;transition:.22s;background-image:linear-gradient(180deg,rgba(255,255,255,.015),transparent)}
+.gpanel:hover{border-color:var(--border2)}
+.ghead{display:flex;align-items:center;gap:10px}
+.ghead h4{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.ghead .status-chip{margin-left:auto}
+.gsub{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:2px}
+.glog{height:210px;overflow-y:auto;border:1px solid var(--border);border-radius:11px;padding:12px 14px;display:flex;flex-direction:column;gap:9px;font-size:13px;line-height:1.55;background:rgba(10,10,14,.5);scroll-behavior:smooth}
+.glog::-webkit-scrollbar{width:6px}
+.glog::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12)}
+.gline{animation:fadeUp .3s}
+.gline.gm{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.gline.gu{color:#ff8a94;font-weight:600;border-left:2px solid rgba(255,70,85,.4);padding-left:8px;margin-left:2px}
+.gline.gd{color:var(--text);border-left:2px solid rgba(255,255,255,.14);padding-left:8px;margin-left:2px;white-space:pre-wrap}
+.gline.gi{color:var(--muted);font-style:italic;font-size:12px}
+.gline.gf{color:var(--green);font-weight:600}
+.gchoices{display:flex;flex-wrap:wrap;gap:8px}
+.gchoice{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font:inherit;font-size:13px;font-weight:600;padding:9px 14px;border-radius:10px;cursor:pointer;transition:.16s;text-align:left}
+.gchoice:hover{border-color:rgba(255,70,85,.5);background:var(--red-soft);transform:translateY(-1px)}
+.gchoice:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.grow{display:flex;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:8px 8px 8px 14px;align-items:center;transition:.2s}
+.grow:focus-within{border-color:rgba(255,70,85,.5);box-shadow:0 0 0 4px rgba(255,70,85,.07)}
+.grow input{flex:1;background:none;border:0;outline:0;color:var(--text);font:inherit;font-size:14px;min-width:0}
+.ghint{font-size:11px;color:var(--muted);opacity:.85}
+
 </style>
 </head>
 <body>
@@ -472,8 +500,8 @@ h1{font-size:clamp(40px,6.5vw,72px);line-height:1.05;font-weight:800;letter-spac
       <button class="gp rv" data-nav="games"><span class="gtag now">PLAY NOW</span><h4>PULSE</h4><p>Ring ko line par rokho — jitni speed, utna maza.</p></button>
       <button class="gp rv" style="--d:.05s" data-nav="games"><span class="gtag now">PLAY NOW</span><h4>STREAK</h4><p>Sequence dekho, yaad karo, repeat karo.</p></button>
       <button class="gp rv" style="--d:.1s" data-nav="games"><span class="gtag ai">AI DEMO</span><h4>Mind Duel</h4><p>Do AI aapas mein khelte hain — live dekho.</p></button>
-      <button class="gp rv" style="--d:.15s" data-nav="games"><span class="gtag ai">COMING SOON</span><h4>Heist Crew</h4><p>AI team ke saath heist plan karo.</p></button>
-      <button class="gp rv" style="--d:.2s" data-nav="games"><span class="gtag ai">COMING SOON</span><h4>Story Forge</h4><p>AI dungeon master ke saath adventure.</p></button>
+      <button class="gp rv" style="--d:.15s" data-nav="games"><span class="gtag ai">LIVE</span><h4>Heist Crew</h4><p>4 AI agents ke saath heist plan karo.</p></button>
+      <button class="gp rv" style="--d:.2s" data-nav="games"><span class="gtag ai">LIVE</span><h4>Story Forge</h4><p>AI dungeon master ke saath adventure.</p></button>
     </div>
   </div>
 
@@ -581,26 +609,48 @@ h1{font-size:clamp(40px,6.5vw,72px);line-height:1.05;font-weight:800;letter-spac
         </div>
       </div>
       <div class="ai-games">
-        <div class="aig">
+        <div class="aig" style="grid-column:1/-1">
           <span class="gtag ai">WITH AI · LIVE DEMO</span>
           <h4>Mind Duel</h4>
           <div class="duel-log" id="gDuel"></div>
           <p style="margin-top:8px">Do AI ek doosre ke khilaf khel rahe hain — backend judne par tum kheloge.</p>
         </div>
-        <div class="aig soon">
-          <span class="gtag ai">COMING SOON</span>
-          <span class="soon-tag">COMING SOON</span>
-          <h4>Heist Crew</h4>
-          <p>4 AI agents ke saath perfect heist plan karo. Har agent ka apna role — aur apni soch.</p>
+      </div>
+
+      <div class="aig-grid">
+        <!-- HEIST CREW (real AI game) -->
+        <div class="gpanel">
+          <div class="ghead">
+            <h4>🎭 Heist Crew</h4>
+            <span class="status-chip" id="heistChip"><span class="dot"></span> READY</span>
+          </div>
+          <div class="gsub">4 AI agents — <b>Lookout, Hacker, Driver, Insider</b>. Apna heist plan likho; sab PARALLEL apne role ka plan dete hain, phir Boss final verdict.</div>
+          <div class="grow">
+            <input id="heistIn" placeholder="Plan likho — jaise: 'Khaali building, subway tunnel se bhaag'" />
+            <button class="btn sm" id="heistGo">▶ RUN</button>
+          </div>
+          <div class="glog" id="heistLog"></div>
+          <div class="ghint">Chhota par specific plan best — har agent ek alag angle se deta hai.</div>
         </div>
-        <div class="aig soon">
-          <span class="gtag ai">COMING SOON</span>
-          <span class="soon-tag">COMING SOON</span>
-          <h4>Story Forge</h4>
-          <p>AI dungeon master hai — tumhari har choice duniya badal deti hai. Infinite adventure.</p>
+
+        <!-- STORY FORGE (real AI game) -->
+        <div class="gpanel">
+          <div class="ghead">
+            <h4>⚔️ Story Forge</h4>
+            <button class="btn ghost sm" id="storyNew" style="margin-left:auto">↻ NEW</button>
+            <span class="status-chip" id="storyChip"><span class="dot"></span> READY</span>
+          </div>
+          <div class="gsub">AI dungeon master. Har scene ke saath <b>3 raaste</b> — jo chuno, kahaani wahi leti hai. 'shuru karo' se shuru hoti hai.</div>
+          <div class="grow">
+            <input id="storyIn" placeholder="shuru karo — ya apna scene do" />
+            <button class="btn sm" id="storyGo">▶ GO</button>
+          </div>
+          <div class="glog" id="storyLog"></div>
+          <div class="gchoices" id="storyChoices"></div>
+          <div class="ghint">Har turn 3 naye raaste — ~8 turns ke baad kahaani apne ending tak pohnchti hai.</div>
         </div>
       </div>
-      <div class="gnote"><svg class="ic"><use href="#i-zap"/></svg> AI games backend connect hote hi live ho jayengi.</div>
+      <div class="gnote" style="margin-top:20px"><svg class="ic"><use href="#i-zap"/></svg> Heist Crew aur Story Forge ab live hain — backend /api/game se. Server offline par demo mode chalta hai.</div>
     </div>
   </div>
 </section>
@@ -889,6 +939,133 @@ function mountDuel(root){
   setInterval(push,1800);
   return {pause(){}};
 }
+
+/* ═════════ AI GAMES — Heist Crew + Story Forge (SSE to /api/game) ═════════ */
+/* User/AI text 100% textContent se render hota hai -> XSS-safe.  */
+function gPush(container, cls, text){ const d=document.createElement('div'); d.className='gline '+cls; d.textContent=text; container.appendChild(d); container.scrollTop=container.scrollHeight; return d; }
+function gMeta(c,t){return gPush(c,'gm',t);}
+function gUser(c,t){return gPush(c,'gu',t);}
+function gAgent(c,t){return gPush(c,'gd',t);}
+function gInfo(c,t){return gPush(c,'gi',t);}
+function gFin(c,t){return gPush(c,'gf',t);}
+function setGchip(id, cls, label){ const c=document.getElementById(id); if(!c)return; c.className='status-chip'+(cls?' '+cls:''); c.innerHTML='<span class="dot"></span> '+label; }
+const ROLE_ICON={Lookout:'👁',Hacker:'💻',Driver:'🛞',Insider:'🎭'};
+function storyRenderChoices(container, choices, onPick){
+  container.innerHTML='';
+  (choices||[]).forEach(ch=>{
+    const b=document.createElement('button'); b.className='gchoice'; b.type='button';
+    b.textContent=ch; b.onclick=()=>onPick(ch); container.appendChild(b);
+  });
+}
+
+/* ---- HEIST CREW ---- */
+const HEIST={gameId:'heist-'+deviceId, busy:false};
+function heistDemo(plan){ /* offline fallback */
+  const log=document.getElementById('heistLog'), inEl=document.getElementById('heistIn');
+  setGchip('heistChip','live','CREW ACTIVE');
+  gInfo(log,'Demo mode — server LIVE hone par asli AI agents kaam karenge.');
+  const roles=['Lookout','Hacker','Driver','Insider'];
+  roles.forEach((r,i)=>setTimeout(()=>{
+    gMeta(log,'— '+r+' —');
+    gAgent(log,'(demo) '+r+' apne angle se plan de raha hai: '+ (plan.length?plan.slice(0,40):'plan') );
+  }, 400*i+400));
+  setTimeout(()=>{
+    gInfo(log,'Boss review…');
+    gAgent(log,'📋 FINAL (demo): Is plan ka ek basic version kaam karega — server LIVE on hone par 4 agents asli plans denge.');
+    gFin(log,'✓ Heist resolved (demo)');
+    setGchip('heistChip','done','DONE'); HEIST.busy=false; inEl.disabled=false;
+  }, 400*roles.length+900);
+}
+async function heistRun(){
+  const inEl=document.getElementById('heistIn'), log=document.getElementById('heistLog');
+  const plan=inEl.value.trim(); if(!plan){toast('Pehle heist plan likho');return;}
+  if(HEIST.busy){toast('Crew abhi kaam kar rahi hai');return;}
+  HEIST.busy=true; inEl.value=''; inEl.disabled=true;
+  setGchip('heistChip','live','CREW ACTIVE');
+  gUser(log,plan);
+  if(!LIVE){ heistDemo(plan); return; }
+  try{
+    await sse(BASE+'/api/game',{game:'heist',message:plan,gameId:HEIST.gameId,workerModel:'omni',deviceId:deviceId},ev=>{
+      if(ev.type==='heist_start'){gInfo(log,ev.text);}
+      else if(ev.type==='agent_start'){gMeta(log,'— '+((ev.role||''))+' —');gInfo(log,(ROLE_ICON[ev.role]||'')+' soch raha hai…');}
+      else if(ev.type==='agent_done'){gAgent(log,ev.text||'');}
+      else if(ev.type==='heist_review'){gInfo(log,ev.text);}
+      else if(ev.type==='heist_final'){gAgent(log,ev.text||'');}
+      else if(ev.type==='game_over'){gFin(log,ev.text||'');setGchip('heistChip','done','DONE');HEIST.busy=false;inEl.disabled=false;}
+      else if(ev.type==='error'){gAgent(log,'⚠ '+ev.text);setGchip('heistChip','','ERROR');HEIST.busy=false;inEl.disabled=false;}
+    });
+    if(HEIST.busy){setGchip('heistChip','done','DONE');HEIST.busy=false;inEl.disabled=false;}
+  }catch(e){
+    gAgent(log,'⚠ Server error: '+e.message);setGchip('heistChip','','ERROR');HEIST.busy=false;inEl.disabled=false;
+  }
+}
+
+/* ---- STORY FORGE ---- */
+const STORY={gameId:'story-'+deviceId, busy:false};
+function storyPick(ch){ if(STORY.busy)return; storySend(ch); }
+function storyDemo(startText){ /* offline fallback */
+  const log=document.getElementById('storyLog'), choices=document.getElementById('storyChoices');
+  let turn=0;
+  const scenes=[
+    ['Tumne ek andheri gali mein aankhein kholeen. Bhoonee khushboo aur bhatke hue log. Koi tumhe dhoondh raha hai.',['Zor se bhaago','Pehle logon ko jaanch lo','Aandhi mein chhup jao']],
+    ['Tum zor se bhage. Kaandhe ke peechhe ek roshni. Ye koi hai jo tumhe jaanta hai.',['Ruk kar samna karo','Chipak ke chhajhle jao','Ek cheeze utha lo']],
+    ['Roshni aayi to tumne dekha — ek purana dost, aur uske haath mein ek chitthhi tumhare naam.',['Chitthhi parho','Use sawaal karo','Bina kuch kahe chale jao']],
+  ];
+  function step(i){
+    if(i>=scenes.length){
+      gFin(log,'💀 (demo) — Kahaani yahan khul jaati hai. Server LIVE par asli AI dungeon master har baar naya likha hua ending deti hai.');
+      document.getElementById('storyIn').disabled=false;
+      setGchip('storyChip','done','ENDED'); STORY.busy=false;
+      return;
+    }
+    gAgent(log,scenes[i][0]);
+    storyRenderChoices(choices, scenes[i][1], ch=>{ gUser(log,ch); step(i+1); });
+  }
+  gInfo(log,'Demo mode — server LIVE hone par asli AI DM chalega.');
+  gUser(log,startText||'shuru karo'); step(0);
+  setGchip('storyChip','live','PLAYING');
+}
+async function storySend(msg){
+  const inEl=document.getElementById('storyIn'), log=document.getElementById('storyLog'), choices=document.getElementById('storyChoices');
+  const text=(msg||inEl.value).trim(); if(!text){return;}
+  if(STORY.busy)return;
+  STORY.busy=true; inEl.value=''; inEl.disabled=true;
+  choices.innerHTML=''; storyRenderChoices(choices,[],()=>{});
+  setGchip('storyChip','live','PLAYING');
+  gUser(log,text);
+  if(!LIVE){ storyDemo(text); return; }
+  try{
+    await sse(BASE+'/api/game',{game:'story',message:text,gameId:STORY.gameId,workerModel:'omni',deviceId:deviceId},ev=>{
+      if(ev.type==='scene'){gAgent(log,ev.text||'');}
+      else if(ev.type==='choices'){storyRenderChoices(choices,ev.choices||[],storyPick);}
+      else if(ev.type==='game_over'){gFin(log,ev.text||'');setGchip('storyChip','done','ENDED');STORY.busy=false;inEl.disabled=false;choices.innerHTML='';}
+      else if(ev.type==='error'){gAgent(log,'⚠ '+ev.text);setGchip('storyChip','','ERROR');STORY.busy=false;inEl.disabled=false;}
+    });
+    if(STORY.busy){STORY.busy=false;inEl.disabled=false;}
+  }catch(e){
+    gAgent(log,'⚠ Server error: '+e.message);setGchip('storyChip','','ERROR');STORY.busy=false;inEl.disabled=false;
+  }
+}
+function storyNew(){
+  STORY.gameId='story-'+deviceId+'-'+Math.random().toString(36).slice(2,8);
+  const log=document.getElementById('storyLog'), choices=document.getElementById('storyChoices');
+  const inEl=document.getElementById('storyIn');
+  log.innerHTML=''; choices.innerHTML=''; inEl.value=''; inEl.disabled=false;
+  setGchip('storyChip','','READY');
+  gInfo(log,'Nayi kahaani — shuru karo.');
+}
+
+/* bind game inputs */
+(function bindGames(){
+  const hi=document.getElementById('heistIn'); if(hi){hi.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();heistRun();}});}
+  const hg=document.getElementById('heistGo'); if(hg){hg.onclick=heistRun;}
+  const si=document.getElementById('storyIn'); if(si){si.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();storySend();}});}
+  const sg=document.getElementById('storyGo'); if(sg){sg.onclick=()=>storySend();}
+  const sn=document.getElementById('storyNew'); if(sn){sn.onclick=storyNew;}
+  // initial hint in each log
+  const hl=document.getElementById('heistLog'); if(hl){gInfo(hl,'Crew ready — apna heist plan likh kar ▶ RUN dabao. (demo mode active hai agar server offline)');}
+  const sl=document.getElementById('storyLog'); if(sl){gInfo(sl,'Dungeon master ready — "shuru karo" likho ya apna scene do. (demo mode active hai agar server offline)');}
+})();
 
 /* ═════════ CHAT — data driven + live API ═════════ */
 let sessions=[{id:'s0',title:'New chat',msgs:[]}];
