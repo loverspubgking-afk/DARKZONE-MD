@@ -1,5 +1,6 @@
 """agent_company.py — AGENT COMPANY (Boss plans, Workers execute, Boss reviews)"""
-import json, re
+import json, re, threading
+from concurrent.futures import ThreadPoolExecutor
 from omniroute_client import chat as omni_chat
 from agent import run_agent
 
@@ -33,9 +34,11 @@ def _llm(prompt, model="auto"):
     return omni_chat(prompt, model=model, timeout=240)
 
 
-def orchestrate(task, on_event=None, worker_model="omni", boss_model="auto", max_workers=4):
-    """Boss plan → workers execute (parallel-ish) → review → final report."""
+def orchestrate(task, on_event=None, worker_model="omni", boss_model="auto", max_workers=4,
+                role_models=None, parallel=True):
+    """Boss plan → workers execute (PARALLEL + per-role models) → review → final report."""
     ev = on_event or (lambda e: None)
+    role_models = role_models or {}
 
     # 1) BOSS PLAN
     ev({"type": "boss_thinking"})
@@ -52,24 +55,39 @@ def orchestrate(task, on_event=None, worker_model="omni", boss_model="auto", max
     subtasks = subtasks[:max_workers]
     ev({"type": "boss_plan", "subtasks": subtasks})
 
-    # 2) WORKERS (sequential — parallel next version)
-    results = []
-    for st in subtasks:
+    # 2) WORKERS — parallel threads + har role apna model use kar sakta hai
+    results = [None] * len(subtasks)
+    lock = threading.Lock()
+
+    def _run_one(i, st):
         role = st.get("role", "coder")
         wtask = st.get("task", "")
         ev({"type": "worker_start", "role": role, "task": wtask})
+        wm = role_models.get(role, worker_model)  # per-role model (mixed brain team)
         try:
             result = run_agent(
                 wtask,
                 system_prompt=ROLES.get(role, ROLES["coder"]),
                 max_steps=8,
                 on_event=lambda e, r=role: ev(dict(e, worker=r)),
-                model=worker_model,
+                model=wm,
             )
         except Exception as e:
             result = f"[worker error: {e}]"
-        results.append(f"[{role}] {result}")
         ev({"type": "worker_done", "role": role, "result": str(result)[:500]})
+        return i, f"[{role}] {result}"
+
+    if parallel and len(subtasks) > 1:
+        with ThreadPoolExecutor(max_workers=min(3, len(subtasks))) as ex:
+            futures = [ex.submit(_run_one, i, st) for i, st in enumerate(subtasks)]
+            for f in futures:
+                i, res = f.result()
+                results[i] = res
+    else:
+        for i, st in enumerate(subtasks):
+            _, results[i] = _run_one(i, st)
+
+    results = [r for r in results if r]
 
     # 3) BOSS REVIEW + FINAL
     ev({"type": "boss_review"})
