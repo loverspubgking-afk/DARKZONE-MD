@@ -5,10 +5,18 @@ KEYS_FILE = "api_keys.json"
 
 def _base(url=None):
     if url: return url.rstrip("/")
+    # 1) pehle localhost (aksar app aur OmniRoute ek hi server par hote hain)
     try:
-        t = httpx.get(GITHUB_OMNI, timeout=15).text.strip()
-        if t.startswith("https://"): return t.rstrip("/")
+        r = httpx.get("http://localhost:20128/v1/models", timeout=4)
+        if r.status_code == 200: return "http://localhost:20128"
     except Exception: pass
+    # 2) GitHub tunnel links (naya repo pehle, purana fallback)
+    for gh in ["https://raw.githubusercontent.com/loverspubgking-afk/redmind-links/main/omni-link.txt",
+               "https://raw.githubusercontent.com/loverspubgking-afk/DARKZONE-MD/main/omni-link.txt"]:
+        try:
+            t = httpx.get(gh, timeout=8).text.strip()
+            if t.startswith("https://"): return t.rstrip("/")
+        except Exception: pass
     return "http://localhost:20128"
 
 def _key(provider=None):
