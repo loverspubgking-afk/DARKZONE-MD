@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse, FileResponse
 from agent import run_agent
 from agent_company import orchestrate
+from games_ai import run_game as run_game_ai
 from notrack_client import chat as simple_chat
 import os as _os
 
@@ -641,6 +642,60 @@ async def company_endpoint(req: Request):
                 if done_flag["v"]:
                     break
                 await asyncio.sleep(0.05)
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@app.post("/api/game")
+async def game_endpoint(req: Request):
+    """AI GAMES — Story Forge (AI dungeon master) + Heist Crew (4 AI roles).
+
+    SSE events:
+      story: scene, choices, choice_result, game_over
+      heist: heist_start, agent_start, agent_done, heist_review, heist_final, game_over
+    """
+    data = await req.json()
+    if not _rl_ok(_client_id(req, data.get("deviceId", "")), limit=20, window=300):
+        return JSONResponse({"error": "rate limit — thodi der baad try karo"}, status_code=429)
+    game = data.get("game", "story")
+    message = data.get("message", "")
+    game_id = data.get("gameId", "default")
+    model = data.get("workerModel", "omni")
+    max_agents = int(data.get("maxAgents", 4) or 4)
+
+    async def event_stream():
+        q: queue.Queue = queue.Queue()
+        done_flag = {"v": False}
+        rid = "game-" + str(time.time())
+        RUNNING.add(rid)
+
+        def on_event(ev):
+            q.put(ev)
+            try:
+                log_activity(ev, "Game:" + str(game)[:12])
+            except Exception:
+                pass
+
+        def worker():
+            try:
+                run_game_ai(game, data.get("deviceId", "anon"), game_id, message,
+                            on_event=on_event, model=model, max_agents=max_agents)
+            except Exception as e:
+                q.put({"type": "game_over", "text": "⚠ Game error: " + str(e), "reason": "error"})
+            finally:
+                done_flag["v"] = True
+
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+        while True:
+            try:
+                ev = q.get(timeout=0.3)
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+            except queue.Empty:
+                if done_flag["v"]:
+                    break
+                await asyncio.sleep(0.05)
+        RUNNING.discard(rid)
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
