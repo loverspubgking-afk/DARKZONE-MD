@@ -15,7 +15,26 @@ from fastapi.middleware.cors import CORSMiddleware
 import time as _tm
 BOOT_T = _tm.time()
 app = FastAPI(title="RED-MIND")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware,
+    allow_origins=["https://redminde.vercel.app", "http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_methods=["*"], allow_headers=["*"])
+
+# ── simple per-device rate limit (abuse guard) ──
+_RL = {}
+def _rl_ok(key, limit=30, window=300):
+    now = _tm.time()
+    arr = [t for t in _RL.get(key, []) if now - t < window]
+    if len(arr) >= limit:
+        _RL[key] = arr
+        return False
+    arr.append(now)
+    _RL[key] = arr
+    if len(_RL) > 5000:  # memory guard
+        _RL.clear()
+    return True
+def _client_id(req, device=""):
+    ip = req.headers.get("x-forwarded-for", "").split(",")[0].strip() or (req.client.host if req.client else "?")
+    return "d:" + str(device)[:40] + "|" + ip
 
 ACTIVITY = []  # global live activity feed
 
@@ -535,10 +554,12 @@ async def index():
 CHAT_STORE = "chats_backup.json"
 
 @app.get("/api/chats")
-async def get_chats():
+async def get_chats(device: str = ""):
+    # sirf us device ka slice return hota hai — poora dump kabhi nahi
     try:
-        if _os.path.exists(CHAT_STORE):
-            return JSONResponse({"chats": json.load(open(CHAT_STORE, encoding="utf-8"))})
+        if device and _os.path.exists(CHAT_STORE):
+            data = json.load(open(CHAT_STORE, encoding="utf-8"))
+            return JSONResponse({"chats": {device: data.get(device, {})}})
     except Exception:
         pass
     return JSONResponse({"chats": {}})
@@ -579,6 +600,8 @@ async def save_key(req: Request):
 @app.post("/api/company")
 async def company_endpoint(req: Request):
     data = await req.json()
+    if not _rl_ok(_client_id(req, data.get("deviceId", "")), limit=10, window=300):
+        return JSONResponse({"error": "rate limit — thodi der baad try karo"}, status_code=429)
     message = data.get("message", "")
     worker_model = data.get("workerModel", "omni")
 
@@ -653,6 +676,8 @@ async def serve_file(fname: str):
 @app.post("/api/agent")
 async def agent_endpoint(req: Request):
     data = await req.json()
+    if not _rl_ok(_client_id(req, data.get("deviceId", ""))):
+        return JSONResponse({"error": "rate limit — thodi der baad try karo"}, status_code=429)
     message = data.get("message", "")
     history = data.get("history", [])
     model = data.get("model", "C")
@@ -697,6 +722,8 @@ async def agent_endpoint(req: Request):
 @app.post("/api/simple")
 async def simple_endpoint(req: Request):
     data = await req.json()
+    if not _rl_ok(_client_id(req, data.get("deviceId", "")), limit=60, window=300):
+        return JSONResponse({"error": "rate limit — thodi der baad try karo"}, status_code=429)
     try:
         answer = simple_chat(data.get("message", ""), history=data.get("history", []))
         return JSONResponse({"answer": answer})
