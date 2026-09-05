@@ -23,7 +23,10 @@ from omniroute_client import chat as omni_chat
 
 
 # ─────────────────────────── helpers ───────────────────────────
-def _llm(prompt, model="omni", timeout=240.0):
+def _llm(prompt, model="auto", timeout=240.0):
+    # backend codes ("omni"/"C"/"ollama") OmniRoute ke liye "auto" ban jate hain
+    if model in ("omni", "C", "ollama", ""):
+        model = "auto"
     """Ek single omni (OmniRoute) call — game prompt ke liye."""
     return omni_chat(prompt, model=model, timeout=timeout)
 
