@@ -1,0 +1,21 @@
+name: Backend Keepalive
+
+on:
+  schedule:
+    - cron: "0 */8 * * *"   # har 8 ghante server restart (24/7 uptime)
+  workflow_dispatch:          # manual button bhi
+
+jobs:
+  restart-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install kaggle -q
+      - run: python kaggle-keepalive.py
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
