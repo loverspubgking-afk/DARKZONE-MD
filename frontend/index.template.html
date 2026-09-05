@@ -6,6 +6,11 @@
 <title>RED-MIND — Free Uncensored AI</title>
 <meta name="description" content="RED-MIND — free AI platform: chat, smart agent, company mode aur games. No login, no fees, $0 forever."/>
 <meta name="theme-color" content="#0a0a0e"/>
+<!-- PWA (AGENT-C) -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
 <meta property="og:title" content="RED-MIND — Free Uncensored AI"/>
 <meta property="og:description" content="Chat, smart agent, company mode aur games — sab free, no login."/>
 <meta property="og:image" content="https://redminde.vercel.app/img/hero.jpg"/>
@@ -154,6 +159,30 @@ h1{font-size:clamp(40px,6.5vw,72px);line-height:1.05;font-weight:800;letter-spac
 .mmeta{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:7px}
 .mtxt{font-size:14.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
 .msg.user .mtxt{background:var(--surface2);border:1px solid var(--border);display:inline-block;padding:12px 16px;border-radius:14px 14px 14px 4px}
+/* ---- markdown (AGENT-C) ---- */
+.mtxt.md{white-space:normal}
+.mtxt.md p{margin:.35em 0}
+.mtxt.md h1,.mtxt.md h2,.mtxt.md h3{margin:.6em 0 .2em;font-size:1.05em;line-height:1.3}
+.mtxt.md code{background:#1a1b22;border:1px solid #2a2c36;border-radius:5px;padding:1px 6px;
+  font-family:'Cascadia Code','SF Mono',Consolas,monospace;font-size:.86em;color:#9be0ff}
+.mtxt.md pre{margin:.6em 0;border:1px solid #262833;border-radius:11px;overflow:hidden;background:#0d0e13}
+.mtxt.md pre code{background:none;border:0;border-radius:0;color:#d9e6ff;white-space:pre;
+  display:block;padding:12px 14px;font-size:12.8px;line-height:1.5}
+.mtxt.md .mdblock-h{display:flex;align-items:center;justify-content:space-between;
+  background:#14151c;padding:5px 10px;border-bottom:1px solid #262833}
+.mtxt.md .mdb-lang{font-size:10.5px;color:#8a94b0;letter-spacing:.6px;text-transform:uppercase}
+.mtxt.md .mdcp{font-size:10.5px;padding:3px 10px;border-radius:6px}
+.mtxt.md .mdcp .ic{width:11px;height:11px}
+/* ---- latency chip (AGENT-C) ---- */
+.lat-chip{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:10.5px;
+  letter-spacing:.5px;padding:3px 10px;border-radius:999px;border:1px solid #4a2230;background:#181015;color:#ffb0bf}
+.lat-chip .dot{width:6px;height:6px;border-radius:50%;background:#ff4655;box-shadow:0 0 7px #ff4655;animation:latpulse 1.4s infinite}
+@keyframes latpulse{0%,100%{opacity:1}50%{opacity:.35}}
+/* ---- share banner (AGENT-C) ---- */
+.share-banner{margin:0 0 14px;padding:11px 14px;border:1px solid #3a4a6e;border-radius:12px;
+  background:rgba(30,45,80,.25);font-size:13px;color:#bcd0f0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.share-banner b{color:#fff}
+.share-banner .abtn{margin-left:auto}
 .mtxt.caret::after{content:"▍";color:var(--red);animation:blink 1s infinite}
 .think{border:1px solid rgba(61,220,151,.25);background:rgba(61,220,151,.04);border-radius:13px;padding:12px 15px;margin-bottom:13px}
 .thk-h{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--green);margin-bottom:9px}
@@ -391,6 +420,7 @@ h1{font-size:clamp(40px,6.5vw,72px);line-height:1.05;font-weight:800;letter-spac
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-3.4M8.6 13.3l6.8 3.4"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 7"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></symbol>
@@ -536,6 +566,7 @@ h1{font-size:clamp(40px,6.5vw,72px);line-height:1.05;font-weight:800;letter-spac
       <div class="chat-head">
         <button id="sideToggle" aria-label="Chats"><svg class="ic"><use href="#i-menu"/></svg></button>
         <span class="chat-title" id="chatTitle">New chat</span>
+        <button class="abtn" id="shareChat" title="Share this chat (copy link)"><svg class="ic"><use href="#i-share"/></svg> Share</button>
         <button class="switch on" id="agentTgl"><span class="knob"></span> Agent Mode</button>
       </div>
       <div id="msgs"></div>
@@ -687,6 +718,7 @@ let currentView='home';
 let gamesLive=[]; let activePulse=null;
 function show(v,push){
   if(!$('#view-'+v)) v='home';
+  if(v!=='chat') exitSharePreview();   // leaving chat exits read-only share preview
   currentView=v;
   $$('.view').forEach(x=>x.classList.remove('active'));
   $('#view-'+v).classList.add('active');
@@ -731,6 +763,86 @@ function typeInto(el,txt,sp,scrollEl){
   });
 }
 function finishType(){if(curType)curType.finish();}
+
+/* ═════════ CHAT POLISH (AGENT-C) — markdown / latency / share / PWA ═════════ */
+/* ---- 1) XSS-safe markdown (escape FIRST, then render a whitelist) ---- */
+const _mdcodes=[];            // copied code lives here (index by data-copy)
+function mdInline(raw){ let s=esc(raw);
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  return s; }
+function mdRender(raw){
+  const lines=String(raw).split('\n'), out=[]; let para=[];
+  const flushP=()=>{ if(para.length){out.push('<p>'+mdInline(para.join(' '))+'</p>');para=[];} };
+  let inF=false, fL='code', fB=[];
+  const flushF=()=>{ const code=fB.join('\n'); const idx=_mdcodes.length; _mdcodes.push(code);
+    out.push('<div class="mdblock"><div class="mdblock-h"><span class="mdb-lang">'+esc(fL)+
+      '</span><button type="button" class="abtn mdcp" data-copy="'+idx+'"><svg class="ic"><use href="#i-copy"/></svg><span>Copy</span></button></div><pre><code>'+esc(code)+'</code></pre></div>'); };
+  for(const line of lines){
+    const f=line.match(/^\s*```+(.*)$/);
+    if(f){ if(!inF){flushP();inF=true;fL=(f[1]||'code').trim()||'code';fB=[];} else {flushF();inF=false;} continue; }
+    if(inF){ fB.push(line); continue; }
+    if(line.trim()===''){ flushP(); continue; }
+    const h=line.match(/^(#{1,3})\s+(.*)$/);
+    if(h){ flushP(); out.push('<h'+h[1].length+'>'+mdInline(h[2])+'</h'+h[1].length+'>'); continue; }
+    para.push(line);
+  }
+  flushP(); if(inF) flushF();
+  return out.join('\n');
+}
+function applyMD(el,raw){ if(!raw) return; el.classList.add('md'); el.innerHTML=mdRender(raw)||esc(raw); }
+
+/* ---- copy handler for code blocks (delegated, reads _mdcodes) ---- */
+$('#msgs').addEventListener('click',e=>{
+  const cp=e.target.closest('.mdcp');
+  if(!cp) return;
+  const idx=+cp.getAttribute('data-copy'); const code=_mdcodes[idx];
+  if(code!==undefined){
+    (navigator.clipboard?navigator.clipboard.writeText(code):Promise.reject())
+      .then(()=>{const sp=cp.querySelector('span');if(sp)sp.textContent='Copied ✓';setTimeout(()=>{if(sp)sp.textContent='Copy';},1200);})
+      .catch(()=>toast('Copy preview mein blocked hai'));
+  }
+});
+
+/* ---- 3) latency badge chip ---- */
+function latChip(nm,ms){
+  const d=document.createElement('div');d.className='lat-chip';
+  const dot=document.createElement('span');dot.className='dot';
+  const t=document.createElement('span');t.textContent=nm+' · '+(ms/1000).toFixed(1)+'s';
+  d.appendChild(dot); d.appendChild(t); return d;
+}
+function modelName(){ return ({C:'RED-CORE',omni:'OMNI'})[curModel()]||'RED-MIND'; }
+function addLatChip(ms){ const last=$$('#msgs .msg.agent').pop(); if(!last) return;
+  const inner=last.querySelector('.minner'); if(inner) inner.appendChild(latChip(modelName(),ms)); }
+
+/* ---- 4) share-chat: #c=<base64> link + read-only preview ---- */
+function b64enc(s){ const b=new TextEncoder().encode(s); let bin=''; b.forEach(x=>bin+=String.fromCharCode(x)); return btoa(bin); }
+function b64dec(s){ const bin=atob(s); const b=Uint8Array.from(bin,c=>c.charCodeAt(0)); return new TextDecoder().decode(b); }
+function sharePayload(){ const s=sessions[curSess]; return JSON.stringify({v:1,title:(s&&s.title)||'Chat',msgs:(s&&s.msgs||[]).map(m=>({role:m.role,content:m.content}))}); }
+function shareUrl(){ return location.origin+location.pathname+'#c='+b64enc(sharePayload()); }
+function parseShare(){ const m=location.hash.match(/^#c=(.+)$/); if(!m) return null;
+  try{ const d=JSON.parse(b64dec(m[1])); if(d&&Array.isArray(d.msgs)) return d; }catch(e){} return null; }
+let shareMode=false;
+function setComposer(on){ $('#inp').disabled=!on; $('#sendBtn').style.opacity=on?'':'0.4'; $('#sendBtn').style.pointerEvents=on?'':'none'; }
+function enterSharePreview(d){
+  sessions=[{id:'share',title:d.title||'Shared chat',msgs:d.msgs.map(m=>({role:m.role==='user'?'user':'agent',content:m.content}))}];
+  curSess=0; show('chat',false);
+  shareMode=true; setComposer(false);
+  $('#chatTitle').textContent=sessions[0].title;
+  const b=document.createElement('div');b.className='share-banner';
+  b.innerHTML='<b>Read-only</b> — yeh ek shared chat hai. Naya chat karne ke liye New Chat dabao.';
+  const p=$('#msgs'); if(p) p.parentNode.insertBefore(b,p);
+  renderMsgs();
+}
+function exitSharePreview(){ if(!shareMode) return; shareMode=false; setComposer(true); const b=$('#msgs .share-banner'); if(b) b.remove(); }
+
+/* ---- 2) PWA: register service worker ---- */
+function registerSW(){
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+    window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  }
+}
+registerSW();
 
 /* ═════════ BACKEND CONNECTION ═════════ */
 let BASE="",LIVE=false,BASE_TRIES=0;
@@ -1106,8 +1218,8 @@ function buildMsgEl(m,mi){
       th.innerHTML='<div class="thk-h"><svg class="ic"><use href="#i-cpu"/></svg>Agent run</div>'+steps+toolsHtml;
       inner.appendChild(th);
     }
-    const a=document.createElement('div');a.className='mtxt';a.textContent=m.content||'';
-    inner.appendChild(a);
+    const a=document.createElement('div');a.className='mtxt';inner.appendChild(a);
+    if(m.content){ if(m.role==='agent') applyMD(a,m.content); else a.textContent=m.content; }
     if(m.content){
       const act=document.createElement('div');act.className='ans-act';
       act.innerHTML='<button class="abtn cp"><svg class="ic"><use href="#i-copy"/></svg>Copy</button><button class="abtn rg"><svg class="ic"><use href="#i-refresh"/></svg>Regenerate</button>';
@@ -1180,7 +1292,7 @@ function liveAgentUI(mi){
     ansEl:inner.querySelector('.mtxt'),
     addStep(t){const d=document.createElement('div');d.className='tk-line';d.textContent='• '+t;this.stepsBox.appendChild(d);scrollM();m.think.push({k:'step',t});},
     addTool(t,wait){const s=document.createElement('span');s.className='tool'+(wait?' wait':'');s.innerHTML='<svg class="ic"><use href="#i-check"/></svg><span></span>';s.lastChild.textContent=t;this.stepsBox.appendChild(s);scrollM();m.think.push({k:'tool',t,w:!!wait});},
-    async answer(txt){m.content=txt;await typeInto(this.ansEl,txt,13,$('#msgs'));},
+    async answer(txt){m.content=txt;await typeInto(this.ansEl,txt,13,$('#msgs'));applyMD(this.ansEl,txt);},
     finish(){const act=document.createElement('div');act.className='ans-act';act.innerHTML='<button class="abtn cp"><svg class="ic"><use href="#i-copy"/></svg>Copy</button><button class="abtn rg"><svg class="ic"><use href="#i-refresh"/></svg>Regenerate</button>';inner.appendChild(act);}
   };
 }
@@ -1192,7 +1304,7 @@ async function sendMsg(t){
   if(s.title==='New chat'&&s.msgs.length===0){s.title=t.slice(0,30);$('#chatTitle').textContent=s.title;renderChatList();}
   s.msgs.push({role:'user',content:t});
   appendMsg(s.msgs.length-1);
-  busy=true;demoStop=false;$('#stopBtn').style.display='';
+  busy=true;demoStop=false;$('#stopBtn').style.display=''; const t0=performance.now(); let aborted=false;
   const done=()=>{busy=false;$('#stopBtn').style.display='none';$('#waitpill').classList.remove('show');saveLocal();saveChats();};
   try{
     if(LIVE){
@@ -1204,7 +1316,7 @@ async function sendMsg(t){
         const m={role:'agent',content:d.answer||d.error||'(koi jawab nahi aaya)'};
         s.msgs.push(m);appendMsg(s.msgs.length-1);
         const el=$$('#msgs .msg').pop().querySelector('.mtxt');el.textContent='';
-        await typeInto(el,m.content,13,$('#msgs'));
+        await typeInto(el,m.content,13,$('#msgs'));applyMD(el,m.content);
       } else {
         $('#waitpill').classList.add('show');
         s.msgs.push({role:'agent',think:[],content:''});
@@ -1228,7 +1340,7 @@ async function sendMsg(t){
         const m={role:'agent',content:'Simple mode — Agent Mode ON karo to plan aur tools bhi dikhein ge. (Server offline — demo)'};
         s.msgs.push(m);appendMsg(s.msgs.length-1);
         const el=$$('#msgs .msg').pop().querySelector('.mtxt');el.textContent='';
-        await typeInto(el,m.content,13,$('#msgs'));
+        await typeInto(el,m.content,13,$('#msgs'));applyMD(el,m.content);
       } else {
         $('#waitpill').classList.add('show');
         s.msgs.push({role:'agent',think:[],content:''});
@@ -1238,7 +1350,7 @@ async function sendMsg(t){
         for(const [n] of [['web_search'],['read_file'],['run_code']]){if(demoStop)break;await sleep(650);ui.addTool(n+' ✓');}
         await sleep(300);
         ui.m.content=replyFor(t);
-        await typeInto(ui.ansEl,ui.m.content,13,$('#msgs'));
+        await typeInto(ui.ansEl,ui.m.content,13,$('#msgs'));applyMD(ui.ansEl,ui.m.content);
         ui.finish();
       }
     }
@@ -1250,10 +1362,21 @@ async function sendMsg(t){
       if(el){const t2=el.querySelector('.mtxt');if(t2&&!t2.textContent)t2.textContent=last.content;}
     }
     if(!(e&&e.name==='AbortError'))toast('Server error — dobara try karo');
+    if(e&&e.name==='AbortError') aborted=true;
+  }
+  /* latency chip: submit -> answer rendered (frontend timing) */
+  if(!aborted){
+    const lm=$$('#msgs .msg.agent').pop();
+    if(lm&&lm.querySelector('.mtxt')&&lm.querySelector('.mtxt').textContent) addLatChip(performance.now()-t0);
   }
   done();
 }
 $('#sendBtn').onclick=()=>{const v=$('#inp').value;$('#inp').value='';$('#inp').style.height='auto';sendMsg(v);};
+$('#shareChat').onclick=()=>{
+  const s=sessions[curSess]; if(!s||!s.msgs.length){toast('Kuch bhejne ke baad hi share ho sakta hai');return;}
+  (navigator.clipboard?navigator.clipboard.writeText(shareUrl()):Promise.reject())
+    .then(()=>toast('Share link copied ✓')).catch(()=>toast('Copy preview mein blocked hai'));
+};
 $('#stopBtn').onclick=()=>{demoStop=true;if(curAbort)curAbort.abort();};
 $('#inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#sendBtn').onclick();}});
 $('#inp').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';});
@@ -1266,6 +1389,7 @@ $('#modelSel').onchange=e=>{
   toast('Model: '+({C:'RED-CORE (cloud, uncensored)',omni:'OMNI (1200+ free models)'})[v]||v);
 };
 $('#newChat').onclick=()=>{
+  exitSharePreview();
   sessions.push({id:'s'+Date.now(),title:'New chat',msgs:[]});
   curSess=sessions.length-1;
   $('#chatTitle').textContent='New chat';
@@ -1498,7 +1622,10 @@ const _gd=mountDuel($('#gDuel'));
 gamesLive=[activePulse,_gs,_gd].filter(Boolean);
 setInterval(tickTeam,1000);
 initBase();
-show((location.hash||'#home').slice(1),false);
+/* AGENT-C: agar #c= share link hai to read-only preview kholo */
+const _share=parseShare();
+if(_share){ enterSharePreview(_share); }
+else{ show((location.hash||'#home').slice(1),false); }
 </script>
 </body>
 </html>
