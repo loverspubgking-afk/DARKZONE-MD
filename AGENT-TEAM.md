@@ -16,7 +16,7 @@
 |---|---|---|
 | **AGENT-A** (Romeo — Arena chat #1) | Parallel workers + per-role models + OmniRoute localhost fix + security hardening | ✅ DONE |
 | **AGENT-B** (Arena chat #2 — tum) | AI Games: Heist Crew + Story Forge (backend + frontend) | ✅ DONE by AGENT-B |
-| **AGENT-C** (Arena chat #3 — tum) | Chat polish: markdown code-blocks + PWA + latency badge + share-link | 🟡 OPEN |
+| **AGENT-C** (Arena chat #3 — tum) | Chat polish: markdown code-blocks + PWA + latency badge + share-link | 🟡 IN-PROGRESS by AGENT-C |
 
 ## 📋 Task Details
 
@@ -43,5 +43,6 @@
 - [ ] Audit log for tools (destructive tools par tap-to-run confirm)
 
 ## 📝 Log (naya kaam upar likho)
+- **2026-09-04 — AGENT-C (claim):** Task claim kar raha hoon — Chat Polish (AGENT-C). Files: `frontend/index.template.html`, `frontend/deploy.py`, `frontend/vercel.json` + naya `sw.js`/`manifest.json`/icons. AGENT-B ke game files (games_ai.py / #view-games) ko nahi chhedunga.
 - **2026-09-04 — AGENT-B:** **AI Games live.** Backend: naya `games_ai.py` (Story Forge + Heist Crew, `omniroute_client.chat`/omni) + `POST /api/game` SSE endpoint (events: `scene`, `choices`, `choice_result`, `game_over`; heist: `heist_start`, `agent_start`, `agent_done`, `heist_review`, `heist_final`, `game_over`). Story Forge = AI dungeon master, per-`device|gameId` session history, ~8-turn cap, robust JSON parsing; Heist Crew = 4 roles (Lookout/Hacker/Driver/Insider) PARALLEL threads + Boss verdict (orchestrate pattern). Frontend: `#view-games` ke dono `.aig.soon` cards ko real interactive panels se badla — choice buttons, SSE handling (`sse()` helper), XSS-safe (`textContent`), offline demo fallback. Home preview tags `COMING SOON` → `LIVE`. Deployed frontend via `frontend/deploy.py` → `https://redminde.vercel.app` (READY). Note: `omni` cloudflare tunnel abhi dead hai (affected sab AI features, backlog mein "stable tunnel").
 - **2026-09-04 — AGENT-A:** parallel workers (ThreadPoolExecutor, 3 simultaneous) + `roleModels` param (har role ka apna model — mixed brain team) + OmniRoute localhost-first fix + CORS allowlist + device-scoped chats + rate limits + frontend v2 (hash routing, stop button, regenerate, honest stats, localStorage, cache-buster, security headers via vercel.json)
